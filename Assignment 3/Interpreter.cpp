@@ -134,3 +134,60 @@ string decToHex(int dec){
     }
     return str;
 }
+
+
+string spaceOut(string line) {
+    int j = 0;
+    int k = 0;
+    int n = line.length();
+    while (j< n && (line.at(n-j-1) == ' ')){
+        j+=1;
+    }
+    while (k<n &&(line.at(k) == ' ')){
+        k += 1;
+    }
+    return line.substr(k,n-j);
+}
+
+
+
+int main(int argc, char** argv) {
+
+    if (argc == 1) {
+        cout << "Enter the file name\n" << endl;
+        return 0;
+    }
+    string infile = argv[1];
+    string line;
+    ifstream file(infile);
+    bool order[2] = {false,false};
+
+    while (getline(file, line)){
+        spaceOut(line);
+        if (line.front() == '#') {}
+        else {
+            if ((order[0] == false) && (order[1] == false)){
+                if (line.substr(0,6) == ".data"){
+                    if (line.length() > 5) {
+                        cout << "Syntax Error found at .data"<< endl;
+                        return 0;
+                    }
+                    order[0] = true;
+                }
+                else {
+                    cout << "Systax error" << endl;
+                }
+            }
+
+            else if ((order[0] == true) && (order[1] == false)) {
+                //.....data
+            }
+
+            else if (order[1] == true) {
+                // ....text
+            }
+
+        }
+
+    }
+}
