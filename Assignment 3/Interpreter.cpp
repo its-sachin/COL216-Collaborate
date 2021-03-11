@@ -21,8 +21,7 @@ class MIPS {
         unordered_map<string,string>:: iterator it;
         it=asciiz.find(name);
         if (it==asciiz.end()){
-            cout<<"exception"<<endl;
-            return "";
+            throw "Not Declared this value in data segment";    
         }
         else {
             return (it->second);
@@ -35,8 +34,7 @@ class MIPS {
         unordered_map<string,int>:: iterator it;
         it=word.find(name);
         if (it==word.end()){
-            cout<<"exception"<<endl;
-            return 0;
+            throw "Not Declared this value in data segment"; 
         }
         else {
             return (it->second);
@@ -46,11 +44,15 @@ class MIPS {
         S.push(value);
     }
     int pop(){
-        return S.pop();
+        try{
+            return S.pop();
+        } catch (const char* msg){
+            cerr<<msg<<endl;
+        }
     }
     void feedReg(int k,int value){
         if (k==0){
-            cout<<"exception"<<endl;
+            throw "cannot modify $zero register"; 
         }
         else {
             regs[k]=value;
@@ -84,7 +86,7 @@ class Stack {
     }
     int pop(){
         if (first==NULL){
-            cout<<"exception"<<endl;
+            throw "Empty Stack"; 
             return 0;
         }
         else {  
