@@ -181,7 +181,7 @@ class MIPS {
                 cout << "Syntax error at line: "<<line<<endl;
                 return false;
             }
-            else if (isReg(v.at(1)) ==false || isReg(v.at(3)) ==false || (task != "aadi" && isReg(v.at(5)) == false)) {
+            else if (isReg(v.at(1)) ==false || isReg(v.at(3)) ==false || (task != "addi" && isReg(v.at(5)) == false)) {
                 cout << "Syntax error: Invalid register at line: "<<line<<endl;
                 return false;
             }

@@ -57,3 +57,8 @@ lw: 0
 sw: 0
 j: 0
 
+
+
+addi $a1, $a2, $a2
+Syntax error: Type mismatch at line: 1
+
