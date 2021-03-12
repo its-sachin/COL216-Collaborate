@@ -250,6 +250,47 @@ class MIPS {
             return true;
         }
 
+        else if (task == "lw" || task == "sw") {
+            if (v.size() <6 || v.size() > 7){
+                cout << "Syntax error at line: "<<line<<endl;
+                return false;
+            }
+
+            if (v.size() == 6){
+                if (v.at(2) != "," || v.at(3) != "(" || v.at(5) != ")"){
+                    cout << "Syntax error at line: "<<line<<endl;
+                    return false;
+                }
+                else if (isReg(v.at(1)) == false || isReg(v.at(4)) == false){
+                    cout << "Syntax error: Invalid register at line: "<<line<<endl;
+                    return false;
+                }
+                return true;
+            }
+
+            else{
+                if (v.at(2) != "," || v.at(4) != "(" || v.at(6) != ")"){
+                    cout << "Syntax error at line: "<<line<<endl;
+                    return false;
+                }
+                else if (isReg(v.at(1)) == false || isReg(v.at(5)) == false){
+                    cout << "Syntax error: Invalid register at line: "<<line<<endl;
+                    return false;
+                }
+                else{
+                    try{
+                        stoi(v.at(3));
+                    }	
+                    catch(exception &err)
+                    {
+                        cout<<"Syntax error: Type mismatch at line: " <<line <<endl;
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
         cout<<"Instruction not defined at line: " << line << endl;
         return false;
     }
