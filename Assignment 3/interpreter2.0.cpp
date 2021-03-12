@@ -168,7 +168,7 @@ class MIPS {
         string task = v.at(0);
         if (task == "add" || task == "sub" || task == "mul"  || task =="aadi") {
             if (v.size() != 6){
-                cout << "Syntax error at line"<<line<<endl;
+                cout << v.size()<<"Syntax error at line"<<line<<endl;
                 return false;
             }
             else if (v.at(2) != "," || v.at(4) != ","){
@@ -203,8 +203,8 @@ class MIPS {
             }
             else {
                 try {
-                    stoi(v.at(5));
-                    if (isInstPos(v.at(5)) == false){
+                    int temp = stoi(v.at(5));
+                    if (isInstPos(temp) == false){
                         return false;
                     }
                 }
@@ -223,8 +223,8 @@ class MIPS {
             }
             else{
                 try {
-                    stoi(v.at(1));
-                    if (isInstPos(v.at(1)) == false){
+                    int temp = stoi(v.at(1));
+                    if (isInstPos(temp) == false){
                         return false;
                     }
                 }
