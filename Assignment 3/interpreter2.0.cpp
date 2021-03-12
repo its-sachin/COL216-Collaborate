@@ -211,6 +211,7 @@ class MIPS {
                 try {
                     int temp = stoi(v.at(5));
                     if (isInstPos(temp) == false){
+                        cout<<"Invalid Instruction to be jumped at line: "<<line<< endl;
                         return false;
                     }
                 }
@@ -231,6 +232,7 @@ class MIPS {
                 try {
                     int temp = stoi(v.at(1));
                     if (isInstPos(temp) == false){
+                         cout<<"Invalid Instruction to be jumped at line: "<<line<< endl;
                         return false;
                     }
                 }
