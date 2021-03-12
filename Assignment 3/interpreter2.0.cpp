@@ -157,6 +157,7 @@ class MIPS {
     }
 
     void printInstCount() {
+        cout<< "Execution count of instructions:"<<endl;
         for (int i =0; i< 10; i++) {
             cout << inst[i] << ": "<< instCount[i]<<endl;
         }
@@ -184,7 +185,7 @@ class MIPS {
                 }	
                 catch(exception &err)
                 {
-                    cout<<"Syntax error: Type mismatch" <<line <<endl;
+                    cout<<"Syntax error: Type mismatch at line: " <<line <<endl;
                     return false;
                 }
             }
@@ -208,7 +209,7 @@ class MIPS {
                     }
                 }
                 catch(exception &error){
-                    cout<<"Syntax error: Type mismatch" <<line <<endl;
+                    cout<<"Syntax error: Type mismatch at line: " <<line <<endl;
                     return false;
                 }
             }
@@ -228,14 +229,14 @@ class MIPS {
                     }
                 }
                 catch(exception &error){
-                    cout<<"Syntax error: Type mismatch" <<line <<endl;
+                    cout<<"Syntax error: Type mismatch at line: " <<line <<endl;
                     return false;
                 }
             }
             return true;
         }
 
-        cout<<"Instruction not defined at line" << line << endl;
+        cout<<"Instruction not defined at line: " << line << endl;
         return false;
     }
 
