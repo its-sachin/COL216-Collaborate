@@ -4,6 +4,51 @@
 #include <vector>
 using namespace std;
 
+struct node {
+    int value;
+    struct node *prev;
+};
+
+class Stack {
+    public:
+    struct node* first=NULL;
+    void push(int value){
+        struct node* a=  (struct node*) malloc (sizeof(struct node));
+        a->value=value;
+        a->prev=first;
+        first=a;
+    }
+    int pop(){
+        if (first==NULL){
+            throw "Empty Stack"; 
+            return 0;
+        }
+        else {  
+            return first->value;
+            first=first->prev;
+        }
+    }
+};
+
+string decToHex(int dec){
+    string str="";
+    char c;
+    while (dec !=0){
+        int temp=0;
+        temp=dec%16;
+        if (temp<10){
+            c=temp+48;
+        }
+        else {
+            c=temp+55;
+        }
+        string s(1,c);
+        str=s+str;
+        dec= dec /16;
+    }
+    return str;
+}
+
 class MIPS {
     private:
     int regs[32]={0};
@@ -83,7 +128,7 @@ class MIPS {
         cout<<s<<endl;
         cout<<"[";
         for(int i=0;i<31;i++){
-            cout<<arr[i]<<":"<<decToHex(regs[i])<<",";
+            cout<<arr[i]<<":"<<decToHex(regs[i])<<","<<endl;
         }
         cout<<arr[31]<<":"<<decToHex(regs[31])<<"]"<<endl;
     }
@@ -91,53 +136,9 @@ class MIPS {
 
 
 
-struct node {
-    int value;
-    struct node *prev;
-};
 
-class Stack {
-    public:
-    struct node* first=NULL;
-    void push(int value){
-        struct node* a=  (struct node*) malloc (sizeof(struct node));
-        a->value=value;
-        a->prev=first;
-        first=a;
-    }
-    int pop(){
-        if (first==NULL){
-            throw "Empty Stack"; 
-            return 0;
-        }
-        else {  
-            return first->value;
-            first=first->prev;
-        }
-    }
-};
-
-string decToHex(int dec){
-    string str="";
-    char c;
-    while (dec !=0){
-        int temp=0;
-        temp=dec%16;
-        if (temp<10){
-            c=temp+48;
-        }
-        else {
-            c=temp+55;
-        }
-        string s(1,c);
-        str=s+str;
-        dec= dec /16;
-    }
-    return str;
-}
-
-
-vector<string> spaceOut(string line,vector<string> v) {
+vector<string> lineToken(string line) {
+    vector<string> v;
     int n=line.length();
     int i=0;
     string str="";
@@ -149,6 +150,7 @@ vector<string> spaceOut(string line,vector<string> v) {
                 v.push_back(str);
                 str="";
             }
+            c=line[i];
         }
         if (c=='#'){
             if (str!=""){
@@ -164,14 +166,45 @@ vector<string> spaceOut(string line,vector<string> v) {
             string sc(1,c);
             v.push_back(sc);
         }
-        string s(1,c);
-        str=str+s; 
+        else {
+            string s(1,c);
+            str=str+s; 
+        }
         i++;      
     }
     return v;
 }
 
+bool isVal(string line,string value) {
+    int n = line.length();
+    int j = 0;
+    int k = 0;
+    while (k<n &&(line.at(k) == ' ')){
+        k += 1;
+    }
+    while (j< n && (line.at(n-j-1) == ' ')){
+        j+=1;
+    }
 
+    line = line.substr(k,n-j-k);
+    n = value.length();
+
+    if (line.substr(0,n) == value){
+        if (line.length() > n){
+            char c = line[n];
+            while (isspace(c) != 0){
+                n += 1;
+                c = line[n];
+            }
+            if (c == '#'){
+                return true;
+            }
+            return false;
+        }
+        return true;
+    }
+    return false;
+}
 
 int main(int argc, char** argv) {
 
@@ -182,15 +215,28 @@ int main(int argc, char** argv) {
     string infile = argv[1];
     string line;
     ifstream file(infile);
-    
-    int count=0;
-    while (getline(file,line)){
-        count++;
-    }
-    vector <string>arr[count];
-    count=0;
+
+    unordered_map<string,vector<vector<string>>> functions;
+
+    bool isfirst = true;
+
     while (getline(file, line)){
-        arr[count]=spaceOut(line,arr[count]);
-        count++;
+        if (line.front() == '#') {}
+        else {
+            if (isVal(line,".data")){
+                if (isfirst) {
+                    //....data
+                    isfirst = false;
+                }
+                else {
+                    cout << "Syntax Error" << endl;
+                }
+            }
+
+            else if (isVal(line, ".text")){
+                //.....text
+                isfirst = false;
+            }
+        }
     }
 }
