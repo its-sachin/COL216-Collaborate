@@ -1,4 +1,4 @@
-#include <iostream>
+    #include <iostream>
 #include <fstream>
 #include <unordered_map>
 #include <vector>
@@ -182,7 +182,11 @@ bool isVal(string line,string value) {
     while (k<n &&(line.at(k) == ' ')){
         k += 1;
     }
-    while (j< n && (line.at(n-j-1) == ' ')){
+    int i=k;
+    while (i<n && (line.at(i)!='#')){
+        i+=1;
+    }
+    while (j< i && (line.at(n-j-1) == ' ')){
         j+=1;
     }
 

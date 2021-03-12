@@ -52,7 +52,6 @@ string decToHex(int dec){
 
 class MIPS {
     private:
-    int hi,low;
     unordered_map<int, vector<string>> instructions;
     int memory[262144] = {0};
 
@@ -63,7 +62,9 @@ class MIPS {
     int getRegValue(string s){
         return regs.at(s);
     }
-
+    void feedReg(string s,int value){
+        regs.at(s)=value;
+    }
 
     // ------------instruction handling--------------------------
 
@@ -86,7 +87,7 @@ class MIPS {
 
     // -------------memory handling-------------------------
 
-    bool sw(int num, int address){
+    bool sw(int address,int num ){
         if (address%4 != 0) {
             cout<< "INVALID Address of memory"<<endl;
             return false;
@@ -112,9 +113,6 @@ class MIPS {
         
     }
 
-
-
-
     void push(int value){
         S.push(value);
     }
@@ -127,18 +125,94 @@ class MIPS {
         }
     }
 
-    int getLow(){
-        return low;
-    }
-
-    int getHigh(){
-        return hi;
-    }
-
     void printReg(){
         for (auto i = regs.begin(); i != regs.end(); i++) {
             cout << i->first << " : "<< (i->second) << ',';
         }
+    }
+
+    //exucuting the file 
+    void executeInst(){
+        int i=1;
+        int n=instructions.size()+1;
+        while(i<n){
+            vector<string> v=instructions.at(i);
+            string a= v.at(0);
+            if (a=="add"){
+                feedReg(v.at(1),getRegValue(v.at(3))+getRegValue(v.at(5)));
+                i++;
+            }
+            else if (a=="sub"){
+                feedReg(v.at(1),getRegValue(v.at(3))-getRegValue(v.at(5)));
+                i++;
+            }
+            else if (a=="mul"){
+                feedReg(v.at(1),getRegValue(v.at(3))*getRegValue(v.at(5)));  
+                i++;              
+            }
+            else if (a=="sw"){
+                if (v.size()==7){
+                    lw(getRegValue(v.at(5))+stoi(v.at(3)),v.at(1));
+                }
+                else if (v.size()==6){
+                   lw(getRegValue(v.at(4)),v.at(1)); 
+                }
+                i++ ;              
+            }
+            else if (a=="addi"){
+                feedReg(v.at(1),getRegValue(v.at(3))+stoi(v.at(5))); 
+                i++;               
+            }
+            else if (a=="lw"){
+                if (v.size()==7){
+                    lw(getRegValue(v.at(5))+stoi(v.at(3)),v.at(1));
+                }
+                else if (v.size()==6){
+                   lw(getRegValue(v.at(4)),v.at(1)); 
+                }
+                i++;
+            }
+            else if (a=="j"){
+                int a=stoi(v.at(1));
+                if (a<1 || a>instructions.size()){
+                    cout<<"invalid jump line at line no"<<i<<endl;
+                    break;
+                }
+                else {
+                    i=a;
+                }
+            }
+            else if (a=="beq"){
+                if (getRegValue(v.at(1))==getRegValue(v.at(3))){
+                    i=stoi(v.at(5));
+                }
+                else {
+                    i++;
+                }              
+            }
+            else if (a=="bne"){
+                if (getRegValue(v.at(1))!=getRegValue(v.at(3))){
+                    i=stoi(v.at(5));
+                }
+                else {
+                    i++;
+                }                
+            }
+            else if (a=="slt"){
+                if (getRegValue(v.at(3))<getRegValue(v.at(5))){
+                    feedReg(v.at(1),1);
+                }
+                else {
+                    feedReg(v.at(1),1);
+                }  
+                i++;              
+            }
+            else {
+                cout<<"Unrecognised operation at line no."<<i<<endl;
+                break;
+            }    
+        }
+
     }
 };
 
@@ -166,7 +240,7 @@ vector<string> lineToken(string line) {
             }
             break;
         }
-        if (c==',' || c=='(' || c==')' || c==':'){
+        if (c==',' || c=='(' || c==')'){
             if (str!=""){
                 v.push_back(str);
                 str="";
