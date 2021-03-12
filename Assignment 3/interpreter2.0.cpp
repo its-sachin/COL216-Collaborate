@@ -92,9 +92,14 @@ class MIPS {
             cout<< "INVALID Address of memory"<<endl;
             return false;
         }
-        else {
-            memory[address/4] = num;
+        //for stack the adress would be negative
+        else if (address<0){  
+            push(num);
             return true;
+        }
+        else{
+            memory[address/4] = num;
+            return true;            
         }
     }
 
@@ -107,10 +112,15 @@ class MIPS {
             cout << "INVALID address of memory" << endl;
             return false; 
         }
-
-        regs[reg] = memory[address/4];
-        return true;
-        
+        //for stack the sp value will be negative
+        else if (address<0){  
+            regs[reg] = pop();
+            return true;
+        } 
+        else {
+            regs[reg] = memory[address/4];
+            return true;            
+        }             
     }
 
     void push(int value){
