@@ -174,15 +174,15 @@ class MIPS {
         string task = v.at(0);
         if (task == "add" || task == "sub" || task == "mul"  || task =="aadi") {
             if (v.size() != 6){
-                cout << v.size()<<"Syntax error at line"<<line<<endl;
+                cout <<"Syntax error at line: "<<line<<endl;
                 return false;
             }
             else if (v.at(2) != "," || v.at(4) != ","){
-                cout << "Syntax error at line "<<line<<endl;
+                cout << "Syntax error at line: "<<line<<endl;
                 return false;
             }
             else if (isReg(v.at(1)) ==false || isReg(v.at(3)) ==false || (task != "aadi" && isReg(v.at(5)) == false)) {
-                cout << "Syntax error: Invalid register at line "<<line<<endl;
+                cout << "Syntax error: Invalid register at line: "<<line<<endl;
                 return false;
             }
             else if (task == "aadi"){
