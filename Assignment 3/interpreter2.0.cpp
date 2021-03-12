@@ -54,8 +54,11 @@ class MIPS {
     private:
     unordered_map<int, vector<string>> instructions;
     int memory[262144] = {0};
+    int clock;
 
     map<string,int> regs={{"$zero",0},{"$at",0},{"$v0",0},{"$v1",0},{"$a0",0},{"$a1",0},{"$a2",0},{"$a3",0},{"$t0",0},{"$t1",0},{"$t2",0},{"$t3",0},{"$t4",0},{"$t5",0},{"$t6",0},{"$t7",0},{"$s0",0},{"$s1",0},{"$s2",0},{"$s3",0},{"$s4",0},{"$s5",0},{"$s6",0},{"$s7",0},{"$t8",0},{"$t9",0},{"$k0",0},{"$k1",0},{"$gp",0},{"$sp",0},{"$fp",0},{"$ra",0}};   
+    string inst[10] = {"add","addi","sub","mul","beq","bne","slt","lw","sw","j"};
+    int instCount[10] = {0}; 
     
     Stack S;
     public:
@@ -64,6 +67,13 @@ class MIPS {
     }
     void feedReg(string s,int value){
         regs.at(s)=value;
+    }
+
+    bool isReg(string s){
+        if (regs.find(s) == regs.end()) {
+            return false;
+        }
+        return true;
     }
 
     // ------------instruction handling--------------------------
@@ -139,47 +149,156 @@ class MIPS {
         for (auto i = regs.begin(); i != regs.end(); i++) {
             cout << i->first << " : "<< (i->second) << ',';
         }
+        cout<<""<<endl;
     }
 
+    void printClock(){
+        cout<< "Number of clock Cycles: " << clock << endl;
+    }
+
+    void printInstCount() {
+        cout<< "Execution count of instructions:"<<endl;
+        for (int i =0; i< 10; i++) {
+            cout << inst[i] << ": "<< instCount[i]<<endl;
+        }
+    }
+
+    bool isError(vector<string> v,int line) {
+
+        string task = v.at(0);
+        if (task == "add" || task == "sub" || task == "mul"  || task =="aadi") {
+            if (v.size() != 6){
+                cout << v.size()<<"Syntax error at line"<<line<<endl;
+                return false;
+            }
+            else if (v.at(2) != "," || v.at(4) != ","){
+                cout << "Syntax error at line "<<line<<endl;
+                return false;
+            }
+            else if (isReg(v.at(1)) ==false || isReg(v.at(3)) ==false || (task != "aadi" && isReg(v.at(5)) == false)) {
+                cout << "Syntax error: Invalid register at line "<<line<<endl;
+                return false;
+            }
+            else if (task == "aadi"){
+                try{
+                    stoi(v.at(5));
+                }	
+                catch(exception &err)
+                {
+                    cout<<"Syntax error: Type mismatch at line: " <<line <<endl;
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        else if (task == "bne" || task == "beq" || task == "slt") {
+            if (v.size() != 6 || v.at(2) != "," || v.at(4) != ",") {
+                cout << "Syntax error at line"<<line<<endl;
+                return false;
+            }
+            else if (isReg(v.at(1)) == false || isReg(v.at(3)) == false) {
+                cout << "Syntax error: Invalid register at line "<<line<<endl;
+                return false;
+            }
+            else {
+                try {
+                    int temp = stoi(v.at(5));
+                    if (isInstPos(temp) == false){
+                        return false;
+                    }
+                }
+                catch(exception &error){
+                    cout<<"Syntax error: Type mismatch at line: " <<line <<endl;
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        else if (task == "j"){
+            if (v.size() != 2){
+                cout << "Syntax error at line"<<line<<endl;
+                return false;
+            }
+            else{
+                try {
+                    int temp = stoi(v.at(1));
+                    if (isInstPos(temp) == false){
+                        return false;
+                    }
+                }
+                catch(exception &error){
+                    cout<<"Syntax error: Type mismatch at line: " <<line <<endl;
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        cout<<"Instruction not defined at line: " << line << endl;
+        return false;
+    }
+
+
     //exucuting the file 
-    void executeInst(){
+    bool executeInst(){
         int i=1;
         int n=instructions.size()+1;
         while(i<n){
             vector<string> v=instructions.at(i);
             string a= v.at(0);
+            if (isError(v,i) ==false) {
+                return false;
+            }
             if (a=="add"){
                 feedReg(v.at(1),getRegValue(v.at(3))+getRegValue(v.at(5)));
+                clock += 1;
+                instCount[0] += 1;
                 i++;
             }
             else if (a=="sub"){
                 feedReg(v.at(1),getRegValue(v.at(3))-getRegValue(v.at(5)));
+                clock += 1;
+                instCount[2] += 1;
                 i++;
             }
             else if (a=="mul"){
-                feedReg(v.at(1),getRegValue(v.at(3))*getRegValue(v.at(5)));  
+                feedReg(v.at(1),getRegValue(v.at(3))*getRegValue(v.at(5))); 
+                clock += 1; 
+                instCount[3] += 1;
                 i++;              
             }
             else if (a=="sw"){
                 if (v.size()==7){
-                    lw(getRegValue(v.at(5))+stoi(v.at(3)),v.at(1));
+                    bool done = sw(getRegValue(v.at(5))+stoi(v.at(3)),getRegValue(v.at(1)));
+                    if (done == false) {return false;}
                 }
                 else if (v.size()==6){
-                   lw(getRegValue(v.at(4)),v.at(1)); 
+                   bool done = sw(getRegValue(v.at(4)),getRegValue(v.at(1))); 
+                   if (done == false) {return false;}
                 }
+                clock += 1;
+                instCount[8] += 1;
                 i++ ;              
             }
             else if (a=="addi"){
                 feedReg(v.at(1),getRegValue(v.at(3))+stoi(v.at(5))); 
+                clock += 1;
+                instCount[1] += 1;
                 i++;               
             }
             else if (a=="lw"){
                 if (v.size()==7){
-                    lw(getRegValue(v.at(5))+stoi(v.at(3)),v.at(1));
+                    bool done = lw(getRegValue(v.at(5))+stoi(v.at(3)),v.at(1));
+                    if (done == false) {return false;}
                 }
                 else if (v.size()==6){
-                   lw(getRegValue(v.at(4)),v.at(1)); 
+                   bool done = lw(getRegValue(v.at(4)),v.at(1)); 
+                   if (done == false) {return false;}
                 }
+                clock += 1;
+                instCount[7] += 1;
                 i++;
             }
             else if (a=="j"){
@@ -189,6 +308,8 @@ class MIPS {
                     break;
                 }
                 else {
+                    clock += 1;
+                    instCount[9] += 1;
                     i=a;
                 }
             }
@@ -198,7 +319,9 @@ class MIPS {
                 }
                 else {
                     i++;
-                }              
+                }
+                clock += 1; 
+                instCount[4] += 1;             
             }
             else if (a=="bne"){
                 if (getRegValue(v.at(1))!=getRegValue(v.at(3))){
@@ -206,7 +329,9 @@ class MIPS {
                 }
                 else {
                     i++;
-                }                
+                } 
+                clock += 1; 
+                instCount[5] += 1;              
             }
             else if (a=="slt"){
                 if (getRegValue(v.at(3))<getRegValue(v.at(5))){
@@ -215,7 +340,9 @@ class MIPS {
                 else {
                     feedReg(v.at(1),1);
                 }  
-                i++;              
+                i++; 
+                clock += 1; 
+                instCount[6] += 1;            
             }
             else {
                 cout<<"Unrecognised operation at line no."<<i<<endl;
@@ -289,6 +416,18 @@ int main(int argc, char** argv) {
         lineVal+=1;
         vector<string> currLine = lineToken(line);
         program.setInst(lineVal,currLine);
+    }
+
+    bool isDone = program.executeInst();
+
+    if (isDone == false) {
+        return -1;
+    }
+    else {
+        program.printReg();
+        program.printClock();
+        program.printInstCount();
+        return 0;
     }
     
 
