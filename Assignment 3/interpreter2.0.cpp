@@ -54,7 +54,7 @@ class MIPS {
     private:
     unordered_map<int, vector<string>> instructions;
     int memory[262144] = {0};
-    int clock;
+    int clock = 0;
 
     map<string,int> regs={{"$zero",0},{"$at",0},{"$v0",0},{"$v1",0},{"$a0",0},{"$a1",0},{"$a2",0},{"$a3",0},{"$t0",0},{"$t1",0},{"$t2",0},{"$t3",0},{"$t4",0},{"$t5",0},{"$t6",0},{"$t7",0},{"$s0",0},{"$s1",0},{"$s2",0},{"$s3",0},{"$s4",0},{"$s5",0},{"$s6",0},{"$s7",0},{"$t8",0},{"$t9",0},{"$k0",0},{"$k1",0},{"$gp",0},{"$sp",0},{"$fp",0},{"$ra",0}};   
     string inst[10] = {"add","addi","sub","mul","beq","bne","slt","lw","sw","j"};
@@ -107,6 +107,9 @@ class MIPS {
             push(num);
             return true;
         }
+        else if (address > 4*sizeof(memory)){
+            cout<<"Memory Overflow!!"<<endl;
+        }
         else{
             memory[address/4] = num;
             return true;            
@@ -127,6 +130,9 @@ class MIPS {
             regs[reg] = pop();
             return true;
         } 
+        else if (address > 4*sizeof(memory)){
+            cout<<"Memory Overflow!!"<<endl;
+        }
         else {
             regs[reg] = memory[address/4];
             return true;            
@@ -147,13 +153,13 @@ class MIPS {
 
     void printReg(){
         for (auto i = regs.begin(); i != regs.end(); i++) {
-            cout << i->first << " : "<< (i->second) << ',';
+            cout << i->first << " : "<< (i->second) << "\t";
         }
-        cout<<""<<endl;
+        cout<<"\n"<<endl;
     }
 
     void printClock(){
-        cout<< "Number of clock Cycles: " << clock << endl;
+        cout<< "Number of clock Cycles: " << clock <<"\n" <<endl;
     }
 
     void printInstCount() {
@@ -194,11 +200,11 @@ class MIPS {
         }
         else if (task == "bne" || task == "beq" || task == "slt") {
             if (v.size() != 6 || v.at(2) != "," || v.at(4) != ",") {
-                cout << "Syntax error at line"<<line<<endl;
+                cout << "Syntax error at line: "<<line<<endl;
                 return false;
             }
             else if (isReg(v.at(1)) == false || isReg(v.at(3)) == false) {
-                cout << "Syntax error: Invalid register at line "<<line<<endl;
+                cout << "Syntax error: Invalid register at line: "<<line<<endl;
                 return false;
             }
             else {
@@ -218,7 +224,7 @@ class MIPS {
 
         else if (task == "j"){
             if (v.size() != 2){
-                cout << "Syntax error at line"<<line<<endl;
+                cout << "Syntax error at line: "<<line<<endl;
                 return false;
             }
             else{
@@ -346,9 +352,11 @@ class MIPS {
             }
             else {
                 cout<<"Unrecognised operation at line no."<<i<<endl;
+                return false;
                 break;
             }    
         }
+        return true;
 
     }
 };
