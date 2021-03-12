@@ -264,6 +264,10 @@ vector<string> lineToken(string line) {
         }
         i++;      
     }
+    if (str!=""){
+        v.push_back(str);
+        str="";
+    }
     return v;
 }
 
