@@ -207,7 +207,7 @@ class MIPS {
                 cout << "Syntax error: Invalid register at line: "<<line<<endl;
                 return false;
             }
-            else {
+            else if (task != "slt"){
                 try {
                     int temp = stoi(v.at(5));
                     if (isInstPos(temp) == false){
@@ -219,6 +219,12 @@ class MIPS {
                     cout<<"Syntax error: Type mismatch at line: " <<line <<endl;
                     return false;
                 }
+            }
+            else {
+                if (isReg(v.at(5)) ==false){
+                    cout << "Syntax error: Invalid register at line: "<<line<<endl;
+                    return false;
+                } 
             }
             return true;
         }
@@ -346,7 +352,7 @@ class MIPS {
                     feedReg(v.at(1),1);
                 }
                 else {
-                    feedReg(v.at(1),1);
+                    feedReg(v.at(1),0);
                 }  
                 i++; 
                 clock += 1; 

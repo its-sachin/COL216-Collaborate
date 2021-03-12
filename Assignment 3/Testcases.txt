@@ -62,3 +62,110 @@ j: 0
 addi $a1, $a2, $a2
 Syntax error: Type mismatch at line: 1
 
+
+
+
+
+addi $a1, $a2, 2
+$a0 : 0 $a1 : 2 $a2 : 0 $a3 : 0 $at : 0 $fp : 0 $gp : 0 $k0 : 0 $k1 : 0 $ra : 0 $s0 : 0 $s1 : 0 $s2 : 0 $s3 : 0 $s4 : 0 $s5 : 0 $s6 : 0 $s7 : 0 $sp : 0 $t0 : 0 $t1 : 0 $t2 : 0 $t3 : 0 $t4 : 0 $t5 : 0 $t6 : 0 $t7 : 0 $t8 : 0 $t9 : 0 $v0 : 0 $v1 : 0 $zero : 0
+
+Number of clock Cycles: 1
+
+Execution count of instructions:
+add: 0
+addi: 1
+sub: 0
+mul: 0
+beq: 0
+bne: 0
+slt: 0
+lw: 0
+sw: 0
+j: 0
+
+
+
+
+bne $a1, $a2, 2
+Invalid Instruction to be jumped at line: 1
+
+
+bne $a1, $a2, 1
+$a0 : 0 $a1 : 0 $a2 : 0 $a3 : 0 $at : 0 $fp : 0 $gp : 0 $k0 : 0 $k1 : 0 $ra : 0 $s0 : 0 $s1 : 0 $s2 : 0 $s3 : 0 $s4 : 0 $s5 : 0 $s6 : 0 $s7 : 0 $sp : 0 $t0 : 0 $t1 : 0 $t2 : 0 $t3 : 0 $t4 : 0 $t5 : 0 $t6 : 0 $t7 : 0 $t8 : 0 $t9 : 0 $v0 : 0 $v1 : 0 $zero : 0
+
+Number of clock Cycles: 1
+
+Execution count of instructions:
+add: 0
+addi: 0
+sub: 0
+mul: 0
+beq: 0
+bne: 1
+slt: 0
+lw: 0
+sw: 0
+j: 0
+
+
+
+
+beq $a1, $a2, 1
+Infinite loop
+
+
+
+
+
+
+slt $a1, $a2, 1
+Syntax error: Invalid register at line: 1
+
+
+
+
+
+slt $a1, $a2, $a2
+$a0 : 0 $a1 : 0 $a2 : 0 $a3 : 0 $at : 0 $fp : 0 $gp : 0 $k0 : 0 $k1 : 0 $ra : 0 $s0 : 0 $s1 : 0 $s2 : 0 $s3 : 0 $s4 : 0 $s5 : 0 $s6 : 0 $s7 : 0 $sp : 0 $t0 : 0 $t1 : 0 $t2 : 0 $t3 : 0 $t4 : 0 $t5 : 0 $t6 : 0 $t7 : 0 $t8 : 0 $t9 : 0 $v0 : 0 $v1 : 0 $zero : 0
+
+Number of clock Cycles: 1
+
+Execution count of instructions:
+add: 0
+addi: 0
+sub: 0
+mul: 0
+beq: 0
+bne: 0
+slt: 1
+lw: 0
+sw: 0
+j: 0
+
+
+
+j 1
+Infinite loop
+
+
+
+
+
+
+j 2
+slt $a1, $a2, $a2
+$a0 : 0 $a1 : 0 $a2 : 0 $a3 : 0 $at : 0 $fp : 0 $gp : 0 $k0 : 0 $k1 : 0 $ra : 0 $s0 : 0 $s1 : 0 $s2 : 0 $s3 : 0 $s4 : 0 $s5 : 0 $s6 : 0 $s7 : 0 $sp : 0 $t0 : 0 $t1 : 0 $t2 : 0 $t3 : 0 $t4 : 0 $t5 : 0 $t6 : 0 $t7 : 0 $t8 : 0 $t9 : 0 $v0 : 0 $v1 : 0 $zero : 0
+
+Number of clock Cycles: 2
+
+Execution count of instructions:
+add: 0
+addi: 0
+sub: 0
+mul: 0
+beq: 0
+bne: 0
+slt: 1
+lw: 0
+sw: 0
+j: 1
