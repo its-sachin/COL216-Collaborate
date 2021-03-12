@@ -128,7 +128,7 @@ class MIPS {
         cout<<s<<endl;
         cout<<"[";
         for(int i=0;i<31;i++){
-            cout<<arr[i]<<":"<<decToHex(regs[i])<<","<<endl;
+            cout<<arr[i]<<":"<<decToHex(regs[i])<<",";
         }
         cout<<arr[31]<<":"<<decToHex(regs[31])<<"]"<<endl;
     }
@@ -204,6 +204,66 @@ bool isVal(string line,string value) {
         return true;
     }
     return false;
+}
+
+vector<string> dataToken(string line){
+    vector<string> v;
+    int n=line.length();
+    int i=0;
+    string str="";
+    while (i<n){
+        char c=line[i];
+        while (c==' '|| c=='\t'){
+            i++;
+            if (str!=""){
+                v.push_back(str);
+                str="";
+            }
+            c=line[i];
+        }
+        if (c=='#'){
+            if (str!=""){
+                v.push_back(str);
+            }
+            break;
+        }
+        if (c==':'){
+            if (str!=""){
+                v.push_back(str);
+                str="";
+            }
+            string sc(1,c);
+            v.push_back(sc);
+        }
+        else if (c =='"') {
+            str = str+c;
+            while (true) {
+                i+=1;
+                str = str + line[i];
+                if (line[i] == '"' &&(i >= n || line[i+1] != '"')){
+                    if (str != ""){
+                        v.push_back(str);
+                        str = "";
+                    }
+                    break;
+                }
+                else if (i >=n){
+                    if (str != ""){
+                        v.push_back(str);
+                        str = "";
+                    }
+                    break;
+                }
+            }
+        }
+        else {
+            string s(1,c);
+            str=str+s; 
+        }
+        i++;      
+    }
+
+    return v;
 }
 
 int main(int argc, char** argv) {
