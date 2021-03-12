@@ -172,7 +172,7 @@ class MIPS {
     bool isError(vector<string> v,int line) {
 
         string task = v.at(0);
-        if (task == "add" || task == "sub" || task == "mul"  || task =="aadi") {
+        if (task == "add" || task == "sub" || task == "mul"  || task =="addi") {
             if (v.size() != 6){
                 cout <<"Syntax error at line: "<<line<<endl;
                 return false;
@@ -185,7 +185,7 @@ class MIPS {
                 cout << "Syntax error: Invalid register at line: "<<line<<endl;
                 return false;
             }
-            else if (task == "aadi"){
+            else if (task == "addi"){
                 try{
                     stoi(v.at(5));
                 }	
