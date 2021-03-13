@@ -321,109 +321,114 @@ class MIPS {
         int k=1;
         while(i<n){
             vector<string> v=instructions.at(i);
-            string a= v.at(0);
             k=i;
-            if (isError(v,i) ==false) {
-                return false;
-            }
-            if (a=="add"){
-                feedReg(v.at(1),getRegValue(v.at(3))+getRegValue(v.at(5)));
-                clock += 1;
-                instCount[0] += 1;
-                i++;
-            }
-            else if (a=="sub"){
-                feedReg(v.at(1),getRegValue(v.at(3))-getRegValue(v.at(5)));
-                clock += 1;
-                instCount[2] += 1;
-                i++;
-            }
-            else if (a=="mul"){
-                feedReg(v.at(1),getRegValue(v.at(3))*getRegValue(v.at(5))); 
-                clock += 1; 
-                instCount[3] += 1;
-                i++;              
-            }
-            else if (a=="sw"){
-                if (v.size()==7){
-                    bool done = sw(getRegValue(v.at(5))+stoi(v.at(3)),getRegValue(v.at(1)));
-                    if (done == false) {return false;}
-                }
-                else if (v.size()==6){
-                   bool done = sw(getRegValue(v.at(4)),getRegValue(v.at(1))); 
-                   if (done == false) {return false;}
-                }
-                clock += 1;
-                instCount[8] += 1;
-                i++ ;              
-            }
-            else if (a=="addi"){
-                feedReg(v.at(1),getRegValue(v.at(3))+stoi(v.at(5))); 
-                clock += 1;
-                instCount[1] += 1;
-                i++;               
-            }
-            else if (a=="lw"){
-                if (v.size()==7){
-                    bool done = lw(getRegValue(v.at(5))+stoi(v.at(3)),v.at(1));
-                    if (done == false) {return false;}
-                }
-                else if (v.size()==6){
-                   bool done = lw(getRegValue(v.at(4)),v.at(1)); 
-                   if (done == false) {return false;}
-                }
-                clock += 1;
-                instCount[7] += 1;
-                i++;
-            }
-            else if (a=="j"){
-                int a=stoi(v.at(1));
-                if (a<1 || a>instructions.size()){
-                    cout<<"invalid jump line at line no"<<i<<endl;
-                    break;
-                }
-                else {
-                    clock += 1;
-                    instCount[9] += 1;
-                    i=a;
-                }
-            }
-            else if (a=="beq"){
-                if (getRegValue(v.at(1))==getRegValue(v.at(3))){
-                    i=stoi(v.at(5));
-                }
-                else {
-                    i++;
-                }
-                clock += 1; 
-                instCount[4] += 1;             
-            }
-            else if (a=="bne"){
-                if (getRegValue(v.at(1))!=getRegValue(v.at(3))){
-                    i=stoi(v.at(5));
-                }
-                else {
-                    i++;
-                } 
-                clock += 1; 
-                instCount[5] += 1;              
-            }
-            else if (a=="slt"){
-                if (getRegValue(v.at(3))<getRegValue(v.at(5))){
-                    feedReg(v.at(1),1);
-                }
-                else {
-                    feedReg(v.at(1),0);
-                }  
-                i++; 
-                clock += 1; 
-                instCount[6] += 1;            
+            if (v.size() ==0){
+                i+= 1;
             }
             else {
-                cout<<"Unrecognised operation at line no."<<i<<endl;
-                return false;
-                break;
-            } 
+                string a= v.at(0);
+                if (isError(v,i) ==false) {
+                    return false;
+                }
+                if (a=="add"){
+                    feedReg(v.at(1),getRegValue(v.at(3))+getRegValue(v.at(5)));
+                    clock += 1;
+                    instCount[0] += 1;
+                    i++;
+                }
+                else if (a=="sub"){
+                    feedReg(v.at(1),getRegValue(v.at(3))-getRegValue(v.at(5)));
+                    clock += 1;
+                    instCount[2] += 1;
+                    i++;
+                }
+                else if (a=="mul"){
+                    feedReg(v.at(1),getRegValue(v.at(3))*getRegValue(v.at(5))); 
+                    clock += 1; 
+                    instCount[3] += 1;
+                    i++;              
+                }
+                else if (a=="sw"){
+                    if (v.size()==7){
+                        bool done = sw(getRegValue(v.at(5))+stoi(v.at(3)),getRegValue(v.at(1)));
+                        if (done == false) {return false;}
+                    }
+                    else if (v.size()==6){
+                    bool done = sw(getRegValue(v.at(4)),getRegValue(v.at(1))); 
+                    if (done == false) {return false;}
+                    }
+                    clock += 1;
+                    instCount[8] += 1;
+                    i++ ;              
+                }
+                else if (a=="addi"){
+                    feedReg(v.at(1),getRegValue(v.at(3))+stoi(v.at(5))); 
+                    clock += 1;
+                    instCount[1] += 1;
+                    i++;               
+                }
+                else if (a=="lw"){
+                    if (v.size()==7){
+                        bool done = lw(getRegValue(v.at(5))+stoi(v.at(3)),v.at(1));
+                        if (done == false) {return false;}
+                    }
+                    else if (v.size()==6){
+                    bool done = lw(getRegValue(v.at(4)),v.at(1)); 
+                    if (done == false) {return false;}
+                    }
+                    clock += 1;
+                    instCount[7] += 1;
+                    i++;
+                }
+                else if (a=="j"){
+                    int a=stoi(v.at(1));
+                    if (a<1 || a>instructions.size()){
+                        cout<<"invalid jump line at line no"<<i<<endl;
+                        break;
+                    }
+                    else {
+                        clock += 1;
+                        instCount[9] += 1;
+                        i=a;
+                    }
+                }
+                else if (a=="beq"){
+                    if (getRegValue(v.at(1))==getRegValue(v.at(3))){
+                        i=stoi(v.at(5));
+                    }
+                    else {
+                        i++;
+                    }
+                    clock += 1; 
+                    instCount[4] += 1;             
+                }
+                else if (a=="bne"){
+                    if (getRegValue(v.at(1))!=getRegValue(v.at(3))){
+                        i=stoi(v.at(5));
+                    }
+                    else {
+                        i++;
+                    } 
+                    clock += 1; 
+                    instCount[5] += 1;              
+                }
+                else if (a=="slt"){
+                    if (getRegValue(v.at(3))<getRegValue(v.at(5))){
+                        feedReg(v.at(1),1);
+                    }
+                    else {
+                        feedReg(v.at(1),0);
+                    }  
+                    i++; 
+                    clock += 1; 
+                    instCount[6] += 1;            
+                }
+                else {
+                    cout<<"Unrecognised operation at line no."<<i<<endl;
+                    return false;
+                    break;
+                } 
+            }
             printRegSet("Instruction at line "+to_string(k));
         }
         return true;
