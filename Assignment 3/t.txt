@@ -1,6 +1,5 @@
 addi $t1, $t0, 5
-j 4
-addi $t0, $t0, 2
+slt $t1,$t3,$t1
 sub $t0, $t1, $t0 #(x2-x1)
 add $t2, $t2, $t3 #(y2+y1)
 mul $t2, $t2, $t2 #(y1^2)

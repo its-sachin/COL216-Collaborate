@@ -34,6 +34,9 @@ class Stack {
 string decToHex(int dec){
     string str="";
     char c;
+    if (dec==0){
+        str="0";
+    }
     while (dec !=0){
         int temp=0;
         temp=dec%16;
@@ -151,9 +154,10 @@ class MIPS {
         }
     }
 
-    void printReg(){
+    void printReg(string s){
+        cout<<s<<endl;
         for (auto i = regs.begin(); i != regs.end(); i++) {
-            cout << i->first << " : "<< (i->second) << "\t";
+            cout << i->first << " : "<< decToHex((i->second)) << " | ";
         }
         cout<<"\n"<<endl;
     }
@@ -309,9 +313,11 @@ class MIPS {
     bool executeInst(){
         int i=1;
         int n=instructions.size()+1;
+        int k=1;
         while(i<n){
             vector<string> v=instructions.at(i);
             string a= v.at(0);
+            k=i;
             if (isError(v,i) ==false) {
                 return false;
             }
@@ -412,7 +418,8 @@ class MIPS {
                 cout<<"Unrecognised operation at line no."<<i<<endl;
                 return false;
                 break;
-            }    
+            } 
+            printReg("Instruction at line "+to_string(k));
         }
         return true;
 
@@ -490,7 +497,6 @@ int main(int argc, char** argv) {
         return -1;
     }
     else {
-        program.printReg();
         program.printClock();
         program.printInstCount();
         return 0;
