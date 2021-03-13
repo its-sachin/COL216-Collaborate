@@ -1,1 +1,1 @@
-sw $a1  ,        (    $a2    )
+add $zero, $a2, $a3

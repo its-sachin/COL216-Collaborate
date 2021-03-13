@@ -185,6 +185,10 @@ class MIPS {
                 cout << "Syntax error: Invalid register at line: "<<line<<endl;
                 return false;
             }
+            else if (v.at(1) == "$zero"){
+                cout << "Syntax error: Cannot change value of zero register at line: "<<line<<endl;
+                return false;
+            }
             else if (task == "addi"){
                 try{
                     stoi(v.at(5));
@@ -253,6 +257,11 @@ class MIPS {
         else if (task == "lw" || task == "sw") {
             if (v.size() <6 || v.size() > 7){
                 cout << "Syntax error at line: "<<line<<endl;
+                return false;
+            }
+
+            if (task == "lw" && v.at(1) == "$zero") {
+                cout << "Syntax error: Cannot load value to zero register at line: "<<line<<endl;
                 return false;
             }
 
