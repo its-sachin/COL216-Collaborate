@@ -231,3 +231,65 @@ slt: 0
 lw: 0
 sw: 1
 j: 0
+
+
+
+
+
+
+
+
+
+
+addi $t1, $t0, 5
+addi $t0, $t0, 2
+sub $t0, $t1, $t0 #(x2-x1)
+add $t2, $t2, $t3 #(y2+y1)
+mul $t2, $t2, $t2 #(y1^2)
+mul $t4, $t3, $t3 #(y2^2)
+add $t2, $t4, $t2 #(y2^2+y1^2)
+
+$a0 : 0 $a1 : 0 $a2 : 0 $a3 : 0 $at : 0 $fp : 0 $gp : 0 $k0 : 0 $k1 : 0 $ra : 0 $s0 : 0 $s1 : 0 $s2 : 0 $s3 : 0 $s4 : 0 $s5 : 0 $s6 : 0 $s7 : 0 $sp : 0 $t0 : 3 $t1 : 5 $t2 : 0 $t3 : 0 $t4 : 0 $t5 : 0 $t6 : 0 $t7 : 0 $t8 : 0 $t9 : 0 $v0 : 0 $v1 : 0 $zero : 0
+
+Number of clock Cycles: 7
+
+Execution count of instructions:
+add: 2
+addi: 2
+sub: 1
+mul: 2
+beq: 0
+bne: 0
+slt: 0
+lw: 0
+sw: 0
+j: 0
+
+
+
+
+
+addi $t1, $t0, 5
+j 4
+addi $t0, $t0, 2
+sub $t0, $t1, $t0 #(x2-x1)
+add $t2, $t2, $t3 #(y2+y1)
+mul $t2, $t2, $t2 #(y1^2)
+mul $t4, $t3, $t3 #(y2^2)
+add $t2, $t4, $t2 #(y2^2+y1^2)
+
+$a0 : 0 $a1 : 0 $a2 : 0 $a3 : 0 $at : 0 $fp : 0 $gp : 0 $k0 : 0 $k1 : 0 $ra : 0 $s0 : 0 $s1 : 0 $s2 : 0 $s3 : 0 $s4 : 0 $s5 : 0 $s6 : 0 $s7 : 0 $sp : 0 $t0 : 5 $t1 : 5 $t2 : 0 $t3 : 0 $t4 : 0 $t5 : 0 $t6 : 0 $t7 : 0 $t8 : 0 $t9 : 0 $v0 : 0 $v1 : 0 $zero : 0
+
+Number of clock Cycles: 7
+
+Execution count of instructions:
+add: 2
+addi: 1
+sub: 1
+mul: 2
+beq: 0
+bne: 0
+slt: 0
+lw: 0
+sw: 0
+j: 1

@@ -1,1 +1,8 @@
-add $zero, $a2, $a3
+addi $t1, $t0, 5
+j 4
+addi $t0, $t0, 2
+sub $t0, $t1, $t0 #(x2-x1)
+add $t2, $t2, $t3 #(y2+y1)
+mul $t2, $t2, $t2 #(y1^2)
+mul $t4, $t3, $t3 #(y2^2)
+add $t2, $t4, $t2 #(y2^2+y1^2)
