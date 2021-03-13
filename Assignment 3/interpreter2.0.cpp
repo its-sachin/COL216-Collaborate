@@ -428,8 +428,8 @@ class MIPS {
                     return false;
                     break;
                 } 
+                printRegSet("Instruction at line "+to_string(k));
             }
-            printRegSet("Instruction at line "+to_string(k));
         }
         return true;
 
