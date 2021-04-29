@@ -2,23 +2,31 @@
 
 class Queue{
 
+private:
+    int f = 0;
+    int r= 0;
+
+
 public:
     int N = 64;
     Waiter Q[64];
-    int f;
-    int r;
+    
 
     int size(){
         return(N-f+r)%N;
     }
 
     bool isEmpty(){
-        return(f=r);
+        // cout << "f "<< f << " r " <<r <<endl;
+        if (f == r) {
+            return true;
+        }
+        return false;
     }
 
     bool isFull() {
         int s = size();
-        return (s = N -1);
+        return (s == N -1);
     }
 
     Waiter front() {
@@ -35,5 +43,8 @@ public:
         Q[r] = o;
         r = (r +1)%N;
     }
+
+    int getf(){return f;}
+    int getr(){return r;}
 
 };

@@ -1,0 +1,4 @@
+main :
+	addi $s0, $zero, 1000
+
+exit :

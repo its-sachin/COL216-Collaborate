@@ -11,6 +11,6 @@ class Waiter {
     string changeReg = "";
     int counter = 0;
 
-    Register *currReg;
+    // Register currReg;
 
 };

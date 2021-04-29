@@ -384,7 +384,7 @@ class MIPS {
                 //     cout << "DRAM Queue full!!"<< endl;
                 //     return false;
                 // }
-                ram.doLS(v,&currReg);
+                ram.doLS(v,currReg);
                 p = "\n  DRAM request issued";
                 i++;
                 if (a == "sw"){
