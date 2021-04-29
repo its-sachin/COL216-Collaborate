@@ -104,11 +104,17 @@ class MIPS {
             p += "\n  [DRAM Execution going on: " + a+  ']';
             p += "\n  [Row active: " + to_string(ram.rowNum) + "]";
             string temp = "";
-            for (auto &it : ram.rowSort) {
-                temp += to_string(it.first) + ":" + to_string(it.second.size()) + " ";
+            int total = 0;
+            int curr = 0;
+            for (int i =0; i< 1024; i++) {
+                if (!ram.rowSort[i].isEmpty()) {
+                    curr = ram.rowSort[i].size();
+                    total += curr;
+                    temp += to_string(i) + ":" + to_string(curr) + " ";
+                }
             }
-            p = p + "\n  [Instructions in queue: " + to_string(ram.queue.size()) + " (" + temp + ")]";
-            if (ram.queue.size() != 0) {
+            p = p + "\n  [Instructions in queue: " + to_string(curr) + " (" + temp + ")]";
+            if (!ram.isEmpty()) {
                 p += "\n  [Queue: \n";
                 p += ram.printQ() + "  ]";
             }
@@ -374,10 +380,10 @@ class MIPS {
                     cout << "INVALID address of memory at line "<< k<<endl;
                     return false;
                 }
-                if (ram.isFul()) {
-                    cout << "DRAM Queue full!!"<< endl;
-                    return false;
-                }
+                // if (ram.isFul()) {
+                //     cout << "DRAM Queue full!!"<< endl;
+                //     return false;
+                // }
                 ram.doLS(v,&currReg);
                 p = "\n  DRAM request issued";
                 i++;

@@ -40,7 +40,6 @@ vector<string> lineToken(string line) {
 }
 int main(int argc, char const *argv[])
 {
-
     if (argc == 1) {
         cout << "Enter the file name\n" << endl;
         return 0;
@@ -64,7 +63,6 @@ int main(int argc, char const *argv[])
 
     MIPS program;
     program.init(1,rowdel,coldel);
-
 
     int addressVal = 0;
     int lineVal = 0;

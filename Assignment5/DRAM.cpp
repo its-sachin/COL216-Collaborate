@@ -1,4 +1,5 @@
-#include "Waiter.cpp"
+
+#include "Queue.cpp"
 
 
 
@@ -112,44 +113,16 @@ class DRAM {
 
     // -----------------------------------ass4-addition-------------------------------------------------------
 
-    unordered_map<int, Waiter> queue;
-    unordered_map<int, vector<int>> rowSort;
 
-    int capacity = 64;
-
-    void setCapacity(int cap){
-        capacity = cap;
-    }
-
-    bool isFul() {
-        if (queue.size() == capacity) {
-            return true;
-        }
-        return false;
-    }
- 
-
-    int bounds(bool isMin) {
-        int min = -1;
-        int max = -1;
-        for (auto& it : queue) {
-            if (min == -1) {
-                min = it.first;
-            }
-
-            else if(it.first < min) {
-                min = it.first;
-            }
-
-            if (max < it.first) {
-                max = it.first;
+    Queue rowSort[1024];
+    
+    bool isEmpty() {
+        for (int i =0; i< 1024; i++) {
+            if (!rowSort[i].isEmpty()){
+                return false;
             }
         }
-
-        if (isMin) {
-            return min;
-        }
-        return max;
+        return true;
     }
 
     void start(Waiter w) {
@@ -188,33 +161,31 @@ class DRAM {
         w.currReg = greg;
 
 
-        if (v.at(0) == "lw") {
-            for (auto it = queue.begin(); it != queue.end(); ){
-                if (it->second.inst.at(0) == "lw" && w.changeReg == it->second.changeReg) {
-                    rowSort[it->second.rowNum].erase(remove(rowSort[it->second.rowNum].begin(), rowSort[it->second.rowNum].end(), it->first), rowSort[it->second.rowNum].end());
-                    queue.erase(it++);
-                    // cout << "kk" << endl;
-                }
-                else {
-                    ++it;
-                }
-            }
-        }
-        else {
-            for (auto it = rowSort[row].begin(); it != rowSort[row].end();){
-                if (queue[*it].inst.at(0) == "sw" && add == queue[*it].address) {
-                    it = rowSort[row].erase(it);
-                    queue.erase(*it);
-                }
-                else {
-                    ++it;
-                }
-            }
-        }
+        // if (v.at(0) == "lw") {
+        //     for (auto it = queue.begin(); it != queue.end(); ){
+        //         if (it->second.inst.at(0) == "lw" && w.changeReg == it->second.changeReg) {
+        //             rowSort[it->second.rowNum].erase(remove(rowSort[it->second.rowNum].begin(), rowSort[it->second.rowNum].end(), it->first), rowSort[it->second.rowNum].end());
+        //             queue.erase(it++);
+        //             // cout << "kk" << endl;
+        //         }
+        //         else {
+        //             ++it;
+        //         }
+        //     }
+        // }
+        // else {
+        //     for (auto it = rowSort[row].begin(); it != rowSort[row].end();){
+        //         if (queue[*it].inst.at(0) == "sw" && add == queue[*it].address) {
+        //             it = rowSort[row].erase(it);
+        //             queue.erase(*it);
+        //         }
+        //         else {
+        //             ++it;
+        //         }
+        //     }
+        // }
         
-        int max = bounds(false);
-        queue[max+1] = w;
-        rowSort[w.rowNum].push_back(max+1);
+        rowSort[w.rowNum].add(w);
     }
 
     bool currIsDep(vector<string> v) {
@@ -323,9 +294,9 @@ class DRAM {
     }
 
     int depInRow(vector<string> v, int row){
-        for (auto it = rowSort[row].rbegin(); it != rowSort[row].rend(); it++){
-            if (isDep(v, queue[*it])){
-                return *it;
+        for (int i = rowSort[row].r - 1; i != rowSort[row].f - 1; i = (i-1)%rowSort[row].N){
+            if (isDep(v, rowSort[row].Q[i])){
+                return i;
             }
         }
         return -1;
@@ -333,11 +304,11 @@ class DRAM {
 
     unordered_map<int,int> allDep(vector<string> v) {
         unordered_map<int,int> ans;
-        for ( const auto &it : rowSort ) {
-            if (it.first != rowNum) {
-                int curr = depInRow(v, it.first); 
+        for (int i = 0; i < 1024; i++ ) {
+            if (i != rowNum) {
+                int curr = depInRow(v, i); 
                 if (curr != -1) {
-                    ans[it.first] = curr;
+                    ans[i] = curr;
                 }
             }
         }
@@ -346,14 +317,11 @@ class DRAM {
 
     void doRow(int row, int bound) {
         while (true) {
-            if (rowSort[row].empty()) {
-                rowSort.erase(row);
+            if (rowSort[row].isEmpty()) {
                 break;
             }
-            int beg = *rowSort[row].begin();
-            start(queue[beg]);
-            rowSort[row].erase(rowSort[row].begin());
-            queue.erase(beg);
+            int beg = rowSort[row].f;
+            start(rowSort[row].pop());
             if (bound != -1 && beg>bound){
                 break;
             }
@@ -365,61 +333,41 @@ class DRAM {
     }
 
     void initDep() {
-        if (rowSort[rowNum].empty()) {
-            rowSort.erase(rowNum);
-            int min = bounds(true);
-            start(queue[min]);
-            int row = queue[min].rowNum;
-            rowSort[row].erase(remove(rowSort[row].begin(), rowSort[row].end(), min), rowSort[row].end());
-            queue.erase(min);
-            if (rowSort[row].empty()) {
-                rowSort.erase(row);
+        if (rowSort[rowNum].isEmpty()) {
+            for (int i =0; i< 1024; i++) {
+                if (!rowSort[i].isEmpty()) {
+                    start(rowSort[i].pop());
+                }
             }
         }
 
         else {
-            int beg = *rowSort[rowNum].begin();
-            start(queue[beg]);
-            rowSort[rowNum].erase(rowSort[rowNum].begin());
-            queue.erase(beg);
+            start(rowSort[rowNum].pop());
         }
     }
 
     void doDep(vector<string> v) {
         unordered_map<int,int> all = allDep(v); 
         if (all.empty()) {
-            if (rowSort[rowNum].empty()) {
-                int min = bounds(true); 
-                start(queue[min]);
-                int row = queue[min].rowNum;
-                rowSort[row].erase(remove(rowSort[row].begin(), rowSort[row].end(), min), rowSort[row].end());
-                queue.erase(min);
-                if (rowSort[row].empty()) {
-                    rowSort.erase(row);
+            if (rowSort[rowNum].isEmpty()) {
+                for (int i =0; i< 1024; i++) {
+                if (!rowSort[i].isEmpty()) {
+                    start(rowSort[i].pop());
                 }
+            }
             }
             else {
                 
                 int curr = depInRow(v, rowNum) ;
                 if (curr== -1) {
-                    int beg = *rowSort[rowNum].begin();
-                    start(queue[beg]);
-                    rowSort[rowNum].erase(rowSort[rowNum].begin());
-                    queue.erase(beg);
+                    start(rowSort[rowNum].pop());
                 }
 
                 else {
                     doRow(rowNum, curr);
                     if (isOn == false) {
 
-                        if (queue.empty()){
-                            return;
-                        }
-
-                        else {
-                            initDep();
-                        }
-
+                        initDep();
                     }
                 }
             }
@@ -439,14 +387,7 @@ class DRAM {
             }
 
             if (isOn == false) {
-                if (queue.empty()){
-                    return;
-                }
-
-                else {
-                    initDep();
-                }
-
+                initDep();
             }
         }
     }
@@ -469,7 +410,7 @@ class DRAM {
             if (isOn) {
                 initWaiter(v,greg);
             }
-            else if (queue.empty()){
+            else if (isEmpty()){
                 start(v,greg);
             }
             else {
@@ -499,7 +440,7 @@ class DRAM {
 
             clock += 1;
             if (isOn == false) {
-                if (queue.empty()){
+                if (isEmpty()){
                     start(v,greg);
                     return;
                 }
@@ -526,7 +467,7 @@ class DRAM {
                 relClock = colDelay;
                 check();
 
-                if (queue.empty()){
+                if (isEmpty()){
                     clock += 1;
                     return;
                 }
@@ -539,7 +480,7 @@ class DRAM {
             }
 
             else  {
-                if (queue.empty() || (depInRow(v,rowNum) == -1 && allDep(v).empty())){
+                if (isEmpty() || (depInRow(v,rowNum) == -1 && allDep(v).empty())){
                     relClock += 1;
                     clock += 1;
                     check();
@@ -569,33 +510,30 @@ class DRAM {
         relClock = colDelay;
         check();
         doRow(rowNum, -1);
-        for (auto it = rowSort.begin(); it != rowSort.end(); ){
-            int row = it->first;
+        for (int row = 0; row< 1024; row++ ){
             while (true) {
-                if (rowSort[row].empty()) {
+                if (rowSort[row].isEmpty()) {
                     break;
                 }
-                int beg = *rowSort[row].begin();
-                start(queue[beg]);
+                start(rowSort[row].pop());
                 relClock = rowDelay;
                 check();
                 relClock = colDelay;
                 check();
-                rowSort[row].erase(rowSort[row].begin());
-                queue.erase(beg);
             }
-            it = rowSort.erase(it++);
         }
     }
 
     string printQ(){
         string out = "";
-        for (auto& it : queue) {
-            string a = "";
-            for (auto& i: it.second.inst) {
-                a += " " + i;
+        for (int row = 0; row< 1024; row++ ){
+            for (int i=rowSort[row].f; i <rowSort[row].r; i = (i+1)%rowSort[row].N) {
+                string a = "";
+                for (auto& i: rowSort[row].Q[i].inst) {
+                    a += " " + i;
+                }
+                out += "    " + a + "\n";
             }
-            out += "    " + to_string(it.first) + ":" + a + "\n";
         }
         return out;
     }
