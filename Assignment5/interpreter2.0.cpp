@@ -17,7 +17,7 @@ class MIPS {
 
     // --------------------------------------------------------------------------------------------------------
 
-    DRAM ram;  
+    DRAM *ram;  
     string inst[10] = {"add","addi","sub","mul","beq","bne","slt","lw","sw","j"};
     int instCount[10] = {0}; 
     
@@ -57,12 +57,15 @@ class MIPS {
 
     // --------------------------------------------------------------------------------------------------------
 
-    void init(int core, int rowd, int cold){
-        ram.rowDelay = rowd;
-        ram.colDelay = cold;
+    void init(int core, DRAM dram){
 
         coreNum = core;
         currReg.coreNumber = core;
+        ram = &dram;
+    }
+
+    Register *getRegPoint() {
+        return &currReg;
     }
 
     void printInstSet(vector<string> v){
@@ -84,7 +87,7 @@ class MIPS {
             regSteps += ramRegSteps + "\n";   
         }
 
-        regSteps+= "\nClock: " + to_string(ram.clock) +"\n  Instruction called: ";
+        regSteps+= "\nClock: " + to_string(ram->clock) +"\n  Instruction called: ";
         printInstSet(v);   
 
         if (task == "add" || task == "sub" || task == "mul" || task == "addi" || task == "slt"){
@@ -95,28 +98,28 @@ class MIPS {
         }
 
         p = "";
-        if (ram.isOn) {
+        if (ram->isOn) {
             string a;
-            for (auto& it : ram.currInst) { 
+            for (auto& it : ram->currInst) { 
                 a = a + " " +  it; 
             }
             p += "\n";
             p += "\n  [DRAM Execution going on: " + a+  ']';
-            p += "\n  [Row active: " + to_string(ram.rowNum) + "]";
+            p += "\n  [Row active: " + to_string(ram->rowNum) + "]";
             string temp = "";
             int total = 0;
             int curr = 0;
             for (int i =0; i< 1024; i++) {
-                if (!ram.rowSort[i].isEmpty()) {
-                    curr = ram.rowSort[i].size();
+                if (!ram->rowSort[i].isEmpty()) {
+                    curr = ram->rowSort[i].size();
                     total += curr;
                     temp += to_string(i) + ":" + to_string(curr) + " ";
                 }
             }
             p = p + "\n  [Instructions in queue: " + to_string(curr) + " (" + temp + ")]";
-            if (!ram.isEmpty()) {
+            if (!ram->isEmpty()) {
                 p += "\n  [Queue: \n";
-                p += ram.printQ() + "  ]";
+                p += ram->printQ() + "  ]";
             }
         }      
 
@@ -131,23 +134,23 @@ class MIPS {
 
     void printClock(){
         cout<< "---------------------------------------Execution complete----------------------------------\n"<<endl;
-        cout<< "Number of clock Cycles: " << ram.clock <<"\n" <<endl;
+        cout<< "Number of clock Cycles: " << ram->clock <<"\n" <<endl;
     }
 
     void printChangeMem() {
         cout << "Memory Updates" << endl;
         for(int i =0 ; i<1024; i++) {
             for (int j =0; j<256; j++) {
-                if (ram.memory[i][j] != 0) {
-                    cout<< 4*(j +256*i) << "-" << 4*(j +256*i) +3<< " =" <<ram.memory[i][j] <<endl;
+                if (ram->memory[i][j] != 0) {
+                    cout<< 4*(j +256*i) << "-" << 4*(j +256*i) +3<< " =" <<ram->memory[i][j] <<endl;
                 }
             }
         }
     }
 
     void printInstCount() {
-        cout<< "Number of row buffer updates: " << ram.updates[0]<<endl;
-        cout<< "Total number of changes made in row buffer: " << ram.updates[1]<< "\n" << endl;
+        cout<< "Number of row buffer updates: " << ram->updates[0]<<endl;
+        cout<< "Total number of changes made in row buffer: " << ram->updates[1]<< "\n" << endl;
 
         printChangeMem();
         cout<< "\nExecution count of instructions:"<<endl;
@@ -162,7 +165,7 @@ class MIPS {
 
 
     int getClock() {
-        return ram.clock;
+        return ram->clock;
     }
 
     // --------------------------------------------------------------------------------------------------------
@@ -316,9 +319,9 @@ class MIPS {
     }
 
     void doLSnot(vector<string> v) {
-        ram.doLSnot(v);
-        if ((currReg.flag != -1)&& currReg.flag == ram.clock){
-            ram.clock += 1;
+        ram->doLSnot(v);
+        if ((currReg.flag != -1)&& currReg.flag == ram->clock){
+            ram->clock += 1;
             currReg.flag = -1;
         }
     }
@@ -384,7 +387,7 @@ class MIPS {
                 //     cout << "DRAM Queue full!!"<< endl;
                 //     return false;
                 // }
-                ram.doLS(v,currReg);
+                ram->doLS(v,coreNum);
                 p = "\n  DRAM request issued";
                 i++;
                 if (a == "sw"){
@@ -401,9 +404,9 @@ class MIPS {
                 //  ---------------------------------ass4-addition-------------------------------------------
 
                 int a = labelLine[v.at(1)];
-                ram.clock += 1;
-                ram.relClock += 1;
-                ram.check();
+                ram->clock += 1;
+                ram->relClock += 1;
+                ram->check();
                 instCount[9] += 1;
                 i=a;
                 p = "   Jumping to line: " + to_string(lineCount[i]);
@@ -412,7 +415,7 @@ class MIPS {
             }
             else if (a=="beq"){
 
-                ram.doLSnot(v);
+                ram->doLSnot(v);
                 // ---------------------------------ass4-addition----------------------------------------------------
 
                 if (currReg.getRegValue(v.at(1))==currReg.getRegValue(v.at(3))){
@@ -428,7 +431,7 @@ class MIPS {
             }
             else if (a=="bne"){
 
-                ram.doLSnot(v);
+                ram->doLSnot(v);
                 // ---------------------------------ass4-addition----------------------------------------------------
 
                 if (currReg.getRegValue(v.at(1))!=currReg.getRegValue(v.at(3))){
@@ -461,16 +464,16 @@ class MIPS {
                 break;
             } 
             
-            printRegSet2(k,v,ram.regSteps,p);
-            ram.regSteps = "";
+            printRegSet2(k,v,ram->regSteps,p);
+            ram->regSteps = "";
         }
 
-        if (ram.isOn == true){
-            ram.doAll();
-            regSteps += ram.regSteps + "\n";
+        if (ram->isOn == true){
+            ram->doAll();
+            regSteps += ram->regSteps + "\n";
         }
-        if (ram.updated == false) {
-            ram.finalWrite();
+        if (ram->updated == false) {
+            ram->finalWrite();
         }
         return true;
 

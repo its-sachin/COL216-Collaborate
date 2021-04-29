@@ -61,8 +61,14 @@ int main(int argc, char const *argv[])
         return 0;
     }
 
+    DRAM dram;
+    dram.rowDelay = rowdel;
+    dram.colDelay = coldel;
+
     MIPS program;
-    program.init(1,rowdel,coldel);
+    program.init(1,dram);
+
+    // dram.setRegs(1,program.getRegPoint());
 
     int addressVal = 0;
     int lineVal = 0;

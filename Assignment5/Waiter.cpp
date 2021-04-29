@@ -10,7 +10,6 @@ class Waiter {
     string addressReg = "";
     string changeReg = "";
     int counter = 0;
-
-    // Register currReg;
+    int coreID =0;
 
 };

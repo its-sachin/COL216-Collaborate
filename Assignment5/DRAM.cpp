@@ -14,7 +14,8 @@ class DRAM {
     int updates[2] = {0};
     bool rowDone = false;
 
-    Register currReg;
+    Register *currReg;
+    Register** allRegs;
     
     int memory[1024][256] = {0};
     int rowBuffer[256] = {0};
@@ -30,16 +31,17 @@ class DRAM {
     int initialClock;
     bool updated = true;
 
-    void start(vector<string> v, Register greg){
+    void start(vector<string> v, int coreID){
+        currReg = allRegs[coreID];
         currInst = v;
         changeReg  = currInst.at(1);
         if (currInst.size() == 6) {
             addressReg = currInst.at(4);
-            address = greg.getRegValue(v.at(4));
+            address = currReg->getRegValue(v.at(4));
         }
         else if (currInst.size() == 7) {
             addressReg = currInst.at(5);
-            address = greg.getRegValue(v.at(5))+stoi(v.at(3));
+            address = currReg->getRegValue(v.at(5))+stoi(v.at(3));
         }
         isOn = true;
         relClock =0;
@@ -47,7 +49,6 @@ class DRAM {
         rowNum = address/1024;
         initialClock = clock;
         rowDone = false;
-        currReg = greg;
 
     }
 
@@ -87,15 +88,15 @@ class DRAM {
         else if ((rowNum == currRow) && relClock == colDelay) {
             if (currInst.at(0) == "lw") {
                 regSteps = regSteps + "\nClock: " + to_string(initialClock+1) + "-"+ to_string(initialClock +colDelay) +"\n  DRAM: Column Access: " + to_string(colNum);
-                currReg.feedReg(changeReg,rowBuffer[colNum]);
-                regSteps = regSteps+ "\n  Register modified : " + changeReg + " = " + to_string(currReg.getRegValue(changeReg));
+                currReg->feedReg(changeReg,rowBuffer[colNum]);
+                regSteps = regSteps+ "\n  Register modified : " + changeReg + " = " + to_string(currReg->getRegValue(changeReg));
                 clock = initialClock + colDelay;
-                currReg.flag = clock;
+                currReg->flag = clock;
             }
             else if (currInst.at(0) == "sw"){
                 regSteps = regSteps + "\nClock: " + to_string(initialClock+1) + "-"+ to_string(initialClock+colDelay) +"\n  DRAM: Column Access: " + to_string(colNum);
-                rowBuffer[colNum] = currReg.getRegValue(changeReg);
-                regSteps = regSteps+ "\n  Memory address modified : " + to_string(address) + " = " + to_string(currReg.getRegValue(changeReg));
+                rowBuffer[colNum] = currReg->getRegValue(changeReg);
+                regSteps = regSteps+ "\n  Memory address modified : " + to_string(address) + " = " + to_string(currReg->getRegValue(changeReg));
                 clock = initialClock + colDelay;
                 updates[1] += 1;
             }
@@ -113,6 +114,9 @@ class DRAM {
 
     // -----------------------------------ass4-addition-------------------------------------------------------
 
+    void setRegs(int coreID, Register *greg) {
+        allRegs[coreID] = greg;
+    }
 
     Queue rowSort[1024];
     
@@ -141,7 +145,7 @@ class DRAM {
     }
 
 
-   void initWaiter(vector<string> v, Register greg) {
+   void initWaiter(vector<string> v, int coreID) {
         Waiter w;
         w.inst = v;
         w.changeReg  = v.at(1);
@@ -149,16 +153,16 @@ class DRAM {
         int add;
         if (v.size() == 6) {
             w.addressReg = v.at(4);
-            add = greg.getRegValue(v.at(4));
+            add = allRegs[coreID]->getRegValue(v.at(4));
         }
         else if (v.size() == 7) {
             w.addressReg = v.at(5);
-            add = greg.getRegValue(v.at(5))+stoi(v.at(3));
+            add = allRegs[coreID]->getRegValue(v.at(5))+stoi(v.at(3));
         }
         w.address = add;
         int row = add/1024;
         w.rowNum = row;
-        // w.currReg = greg;
+        w.coreID = coreID;
 
 
         // if (v.at(0) == "lw") {
@@ -210,11 +214,11 @@ class DRAM {
             int add;
             if (v.size() == 6) {
                 a1 = v.at(4);
-                add = currReg.getRegValue(v.at(4));
+                add = currReg->getRegValue(v.at(4));
             }
             else if (v.size() == 7) {
                 a1 = v.at(5);
-                add = currReg.getRegValue(v.at(5))+stoi(v.at(3));
+                add = currReg->getRegValue(v.at(5))+stoi(v.at(3));
             }
 
             if (currInst.at(0) == "lw") {
@@ -263,11 +267,11 @@ class DRAM {
             int add;
             if (v.size() == 6) {
                 a1 = v.at(4);
-                add = currReg.getRegValue(v.at(4));
+                add = currReg->getRegValue(v.at(4));
             }
             else if (v.size() == 7) {
                 a1 = v.at(5);
-                add = currReg.getRegValue(v.at(5))+stoi(v.at(3));
+                add = currReg->getRegValue(v.at(5))+stoi(v.at(3));
             }
 
             if (w.inst.at(0) == "lw") {
@@ -300,7 +304,7 @@ class DRAM {
         int r = rowSort[row].getr();
         int f = rowSort[row].getf();
         for (int i = f; i != r; i = (i+1)%rowSort[row].N){
-            if (isDep(v, rowSort[row].Q[r+f-i])){
+            if (isDep(v, rowSort[row].Q[r+f-i-1])){
                 return i;
             }
         }
@@ -399,11 +403,11 @@ class DRAM {
     }
 
 
-    void doLS(vector<string> v, Register greg) {
+    void doLS(vector<string> v, int coreID) {
 
         if (isOn == false) {
             clock += 1;
-            start(v,greg);
+            start(v,coreID);
             return;
         }
 
@@ -414,14 +418,14 @@ class DRAM {
             clock += 1;
             check();
             if (isOn) {
-                initWaiter(v,greg);
+                initWaiter(v,coreID);
             }
             else if (isEmpty()){
-                start(v,greg);
+                start(v,coreID);
             }
             else {
                 initDep();
-                initWaiter(v,greg);
+                initWaiter(v,coreID);
             }
             return;
         }
@@ -447,19 +451,19 @@ class DRAM {
             clock += 1;
             if (isOn == false) {
                 if (isEmpty()){
-                    start(v,greg);
+                    start(v,coreID);
                     return;
                 }
 
                 else {
                     initDep();
-                    initWaiter(v,greg);
+                    initWaiter(v,coreID);
                 }
 
             }
 
             else {
-                initWaiter(v,greg);
+                initWaiter(v,coreID);
             }
         }
     }
@@ -518,21 +522,15 @@ class DRAM {
         doRow(rowNum, -1);
         for (int row = 0; row< 1024; row++ ){
             while (true) {
-                cout <<"1" << endl;
                 if (rowSort[row].isEmpty()) {
                     break;
                 }
                 cout <<row << endl;
                 start(rowSort[row].pop());
-                cout <<"3" << endl;
                 relClock = rowDelay;
-                cout <<"4" << endl;
                 check();
-                cout <<"5" << endl;
                 relClock = colDelay;
-                cout <<"6" << endl;
                 check();
-                cout <<"7" << endl;
             }
         }
     }
