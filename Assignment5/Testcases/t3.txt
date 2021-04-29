@@ -1,0 +1,12 @@
+main:
+addi $t0,$zero,1024
+addi $t1,$zero,2024
+addi $t2,$zero,3024
+addi $t3,$zero,4024
+addi $t4,$zero,5024
+addi $t5,$zero,6024
+lw $t0,1000($t1)
+lw $t1,1000($t2)
+lw $t2,1000($t3)
+lw $t3,1000($t4)
+add $t0,$t1,$t2

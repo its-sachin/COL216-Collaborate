@@ -1,0 +1,8 @@
+main :
+	sw $t0, 0($zero)
+	sw $t1, 0($zero)
+	sw $t2, 0($zero)
+	sw $t3, 0($zero)
+	sw $t4, 0($s0)
+
+exit:

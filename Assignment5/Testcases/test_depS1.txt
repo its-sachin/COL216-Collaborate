@@ -1,0 +1,15 @@
+main:
+
+addi $a0, $zero, 10
+sw $a0, 100($a2) 
+lw $t1, 100($s0)
+lw $a2, 1024($s0)
+lw $t1, 1000($s0)
+lw $a1, 1100($s0)
+lw $a3, 1300($s0)
+lw $t0, 0($s0)
+
+sw $v0, 1000($a2)  #dep with 2nd
+lw $t2, 200($s0)
+
+exit:

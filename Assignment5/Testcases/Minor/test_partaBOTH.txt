@@ -1,0 +1,7 @@
+main:
+addi $s0, $t0, 1000
+addi $s1, $t0, 2000
+addi $s2, $t0, 2004
+sw $t0, 0($s0)
+lw $t1, 0($s1)
+sw $t1, 0($s2)
