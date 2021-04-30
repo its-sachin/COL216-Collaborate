@@ -60,13 +60,21 @@ int main(int argc, char const *argv[])
         cout << "Delays can not be negative \n" << endl;
         return 0;
     }
+    ram.rowDelay = rowdel;
+    ram.colDelay = coldel;
 
-    DRAM dram;
-    dram.rowDelay = rowdel;
-    dram.colDelay = coldel;
 
-    MIPS program;
-    program.init(1,dram);
+
+    int totalCore = 1;
+
+    allReg = new Register[totalCore];
+    MIPS programs[totalCore];
+
+    for (int i =0; i< totalCore; i++) {
+        allReg[i].coreNumber = i;
+        programs[i].init(i);
+    }
+    
 
     // dram.setRegs(1,program.getRegPoint());
 
@@ -92,13 +100,13 @@ int main(int argc, char const *argv[])
                 isMain = true;
                 mainInst = addressVal + 1;
             }
-            program.setLabel(currLine.at(0),addressVal+1);
+            programs[0].setLabel(currLine.at(0),addressVal+1);
         }
         else {
             addressVal+=1;
             lineVal += 1;
-            program.setInst(addressVal,currLine);
-            program.setInstLine(addressVal,lineVal);
+            programs[0].setInst(addressVal,currLine);
+            programs[0].setInstLine(addressVal,lineVal);
         }
     }
 
@@ -113,14 +121,15 @@ int main(int argc, char const *argv[])
     }
 
     
-    bool isDone = program.executeInst(mainInst);
+    bool isDone = programs[0].executeInst(mainInst);
     if (isDone == false) {
         return -1;
     }
 
-    program.printReg();
-    program.printClock();
-    program.printInstCount();
+    for (int i=0; i < totalCore; i++) {
+        programs[0].printAll();
+    }
+    ram.printAll();
 
     return 0;
 }

@@ -8,8 +8,8 @@ private:
 
 
 public:
-    int N = 64;
-    Waiter Q[64];
+    int N = 32;
+    Waiter Q[32];
     
 
     int size(){
