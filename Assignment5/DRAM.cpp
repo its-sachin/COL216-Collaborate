@@ -114,6 +114,16 @@ class DRAM {
     // -----------------------------------ass4-addition-------------------------------------------------------
 
     Queue rowSort[1024];
+
+    // void p() {
+    //     for (int i =0; i< 1024; i++) {
+    //         if (!rowSort[i].isEmpty()){
+    //             for (int j = rowSort[i].getf(); j != rowSort[i].getr(); j = (j+1)%rowSort[i].N){
+    //                 cout<< i << " "<< rowSort[i].Q->inst.at(1) << endl;
+    //             }
+    //         }
+    //     }
+    // }
     
     bool isEmpty() {
         for (int i =0; i< 1024; i++) {
@@ -159,30 +169,6 @@ class DRAM {
         w.rowNum = row;
         w.coreID = coreID;
 
-
-        // if (v.at(0) == "lw") {
-        //     for (auto it = queue.begin(); it != queue.end(); ){
-        //         if (it->second.inst.at(0) == "lw" && w.changeReg == it->second.changeReg) {
-        //             rowSort[it->second.rowNum].erase(remove(rowSort[it->second.rowNum].begin(), rowSort[it->second.rowNum].end(), it->first), rowSort[it->second.rowNum].end());
-        //             queue.erase(it++);
-        //             // cout << "kk" << endl;
-        //         }
-        //         else {
-        //             ++it;
-        //         }
-        //     }
-        // }
-        // else {
-        //     for (auto it = rowSort[row].begin(); it != rowSort[row].end();){
-        //         if (queue[*it].inst.at(0) == "sw" && add == queue[*it].address) {
-        //             it = rowSort[row].erase(it);
-        //             queue.erase(*it);
-        //         }
-        //         else {
-        //             ++it;
-        //         }
-        //     }
-        // }
         
         rowSort[w.rowNum].add(w);
     }
@@ -300,19 +286,19 @@ class DRAM {
         int f = rowSort[row].getf();
         for (int i = f; i != r; i = (i+1)%rowSort[row].N){
             if (isDep(v, rowSort[row].Q[r+f-i-1])){
-                return i;
+                return (r+f-1-i);
             }
         }
         return -1;
     }
 
-    unordered_map<int,int> allDep(vector<string> v) {
-        unordered_map<int,int> ans;
+    vector<pair<int,int>> allDep(vector<string> v) {
+        vector<pair<int,int>> ans;
         for (int i = 0; i < 1024; i++ ) {
             if (i != rowNum) {
                 int curr = depInRow(v, i); 
                 if (curr != -1) {
-                    ans[i] = curr;
+                    ans.push_back(make_pair(i,curr));
                 }
             }
         }
@@ -352,7 +338,7 @@ class DRAM {
     }
 
     void doDep(vector<string> v) {
-        unordered_map<int,int> all = allDep(v); 
+        vector<pair<int,int>> all = allDep(v); 
         if (all.empty()) {
             if (rowSort[rowNum].isEmpty()) {
                 for (int i =0; i< 1024; i++) {
@@ -362,7 +348,6 @@ class DRAM {
                 }
             }
             else {
-                
                 int curr = depInRow(v, rowNum) ;
                 if (curr== -1) {
                     start(rowSort[rowNum].pop());
@@ -372,6 +357,10 @@ class DRAM {
                     doRow(rowNum, curr);
                     if (isOn == false) {
 
+                        if (isEmpty()) {
+                            return;
+                        }
+
                         initDep();
                     }
                 }
@@ -380,16 +369,19 @@ class DRAM {
 
         else {
             doRow(rowNum, -1);
+            int i = 0;
 
-            for (auto it = all.begin(); it != all.end(); ){
-                if (all.size() == 1) {
-                    doRow(it->first, it->second);
+            for (auto& it : all ){
+                i += 1;
+                if (i == all.size()) {
+                    doRow(it.first, it.second);
                 }
                 else {
-                    doRow(it->first,-1);
+                    doRow(it.first,-1);
                 }
-                it = all.erase(it++);
             }
+
+            all.clear();
 
             if (isOn == false) {
                 initDep();
@@ -406,7 +398,7 @@ class DRAM {
             return;
         }
 
-        unordered_map<int,int> all = allDep(v); 
+        vector<pair<int,int>> all = allDep(v); 
 
         if (all.empty()) {
             relClock += 1;
@@ -433,15 +425,20 @@ class DRAM {
             check();
             doRow(rowNum, -1);
 
-            for (auto it = all.begin(); it != all.end(); ){
-                if (all.size() == 1) {
-                    doRow(it->first, it->second);
+            int i = 0;
+
+            for (auto& it : all ){
+                i += 1;
+                if (i == all.size()) {
+                    doRow(it.first, it.second);
                 }
                 else {
-                    doRow(it->first,-1);
+                    doRow(it.first,-1);
                 }
-                it = all.erase(it++);
             }
+
+            all.clear();
+
 
             clock += 1;
             if (isOn == false) {
@@ -520,7 +517,6 @@ class DRAM {
                 if (rowSort[row].isEmpty()) {
                     break;
                 }
-                cout <<row << endl;
                 start(rowSort[row].pop());
                 relClock = rowDelay;
                 check();

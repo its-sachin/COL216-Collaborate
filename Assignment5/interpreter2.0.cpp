@@ -313,7 +313,8 @@ class MIPS {
             auto pointer = lineCount.find(i);
             k=pointer->second;
             p = "";
-            // cout << ram.printQ() << endl;
+            // cout << "line " <<  k << endl;
+            // ram.p();
             string a= v.at(0);
             if (isError(v,k) ==false) {
                 return false;
