@@ -152,7 +152,7 @@ class DRAM {
     }
 
 
-   void initWaiter(vector<string> v, int coreID) {
+    void initWaiter(vector<string> v, int coreID) {
         Waiter w;
         w.inst = v;
         w.changeReg  = v.at(1);
@@ -175,7 +175,10 @@ class DRAM {
         rowSort[w.rowNum].add(w);
     }
 
-    bool currIsDep(vector<string> v) {
+    bool currIsDep(vector<string> v,int coreNo) {
+        if (currCore!=coreNo){
+            return false;
+        }
         string task = v.at(0);
         if (task == "add" || task == "addi" || task == "mul" || task == "sub" || task == "slt") {
             if (addressReg == v.at(1) || changeReg == v.at(1) || (currInst.at(0) == "lw" && (changeReg == v.at(3) || changeReg == v.at(5)))){
@@ -228,7 +231,10 @@ class DRAM {
         return false;
     }
 
-    bool isDep(vector<string> v, Waiter w) {
+    bool isDep(vector<string> v, Waiter w,int coreNo) {
+        if (w.coreID!=coreNo){
+            return false;
+        }
         string task = v.at(0);
         if (task == "add" || task == "addi" || task == "mul" || task == "sub" || task == "slt") {
             if (w.addressReg == v.at(1) || w.changeReg == v.at(1) || (w.inst.at(0) == "lw" && (w.changeReg == v.at(3) || w.changeReg == v.at(5)))){
@@ -280,25 +286,25 @@ class DRAM {
         return false;
     }
 
-    int depInRow(vector<string> v, int row){
+    int depInRow(vector<string> v, int row, int coreNo){
         if (rowSort[row].isEmpty()){
             return -1;
         }
         int r = rowSort[row].getr();
         int f = rowSort[row].getf();
         for (int i = f; i != r; i = (i+1)%rowSort[row].N){
-            if (isDep(v, rowSort[row].Q[r+f-i-1])){
+            if (isDep(v, rowSort[row].Q[r+f-i-1],coreNo)){
                 return (r+f-1-i);
             }
         }
         return -1;
     }
 
-    vector<pair<int,int>> allDep(vector<string> v) {
+    vector<pair<int,int>> allDep(vector<string> v,int coreNo) {
         vector<pair<int,int>> ans;
         for (int i = 0; i < 1024; i++ ) {
             if (i != rowNum) {
-                int curr = depInRow(v, i); 
+                int curr = depInRow(v, i,coreNo); 
                 if (curr != -1) {
                     ans.push_back(make_pair(i,curr));
                 }
@@ -339,8 +345,8 @@ class DRAM {
         }
     }
 
-    void doDep(vector<string> v) {
-        vector<pair<int,int>> all = allDep(v); 
+    void doDep(vector<string> v, int coreNo) {
+        vector<pair<int,int>> all = allDep(v,coreNo); 
         if (all.empty()) {
             if (rowSort[rowNum].isEmpty()) {
                 for (int i =0; i< 1024; i++) {
@@ -350,7 +356,7 @@ class DRAM {
                 }
             }
             else {
-                int curr = depInRow(v, rowNum) ;
+                int curr = depInRow(v, rowNum,coreNo) ;
                 if (curr== -1) {
                     start(rowSort[rowNum].pop());
                 }
@@ -391,21 +397,82 @@ class DRAM {
         }
     }
 
+    void performInst(vector<string> v,int coreNo){
+        string a= v.at(0);
+        if (!isOn){
+            if (a=="add"){
+                allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))+allReg[coreNo].getRegValue(v.at(5)));
+            }
+            else if (a=="sub"){
+                allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))-allReg[coreNo].getRegValue(v.at(5)));
+            }
+            else if (a=="mul"){        
+                allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))*allReg[coreNo].getRegValue(v.at(5)));
+            }
+            else if (a=="addi"){
+                allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))+stoi(v.at(5)));               
+            }
+            else if (a=="slt"){
+                if (allReg[coreNo].getRegValue(v.at(3))<allReg[coreNo].getRegValue(v.at(5))){
+                   allReg[coreNo].feedReg(v.at(1),1);
+                }
+                else {
+                   allReg[coreNo].feedReg(v.at(1),0);
+                }        
+            }
+        }
+    }
 
     void doIns(int N, vector<string> *arrayIns) {
         if (isOn) {
+             if (arrayIns[currCore].size() != 0 ) {
+                if (arrayIns[currCore].at(0) == "lw" || arrayIns[currCore].at(0) == "sw"){
+                    vector<pair<int,int>> all = allDep(arrayIns[currCore],currCore);
+                    //no dependency
+                    if (all.empty()) {
+                        relClock += 1;
+                        clock += 1;
+                        check();
+                        if (isOn) {
+                            initWaiter(arrayIns[currCore],currCore);
+                        }
+                        else if (isEmpty()){
+                            start(arrayIns[currCore],currCore);
+                        }
+                        else {
+                            initDep();
+                            initWaiter(arrayIns[currCore],currCore);
+                        }
+                    }
+                    //depenedency hence this core is now blocked
+                    else {  
+                          
+                    }        
+                }
+                else {
+                    //dependency found in the curr task
+                    if (currIsDep(arrayIns[currCore],currCore)){
+                    }
+                    else  {
+                        //no dependency here 
+                        if (isEmpty() || (depInRow(arrayIns[currCore],rowNum,currCore) == -1 && allDep(arrayIns[currCore],currCore).empty())){
+                            relClock += 1;
+                            clock += 1;
+                            check();
+                            return;
+                        }
+                        // dependecy found                      
+                        else {
 
+                        }
+                    }                  
+                }
+            }           
 
         }
 
         else {
             bool started = false;
-
-            if (arrayIns[currCore].size() != 0 && (arrayIns[currCore].at(0) == "lw" || arrayIns[currCore].at(0) == "sw")) {
-                started = true;
-                start(arrayIns[currCore],currCore);
-            }
-
             for (int i =0; i< N; i++) {
                 if (arrayIns[i].size() !=0) {
                     if ((arrayIns[i].at(0) == "lw" || arrayIns[i].at(0) == "sw") && i != currCore) {
@@ -417,13 +484,11 @@ class DRAM {
                             initWaiter(arrayIns[i],i);
                         }
                     }
-
                     else {
-                        clock += 1;
+                        performInst(arrayIns[i],i);
                     }
                 }
             }
-
         }
     }
 
