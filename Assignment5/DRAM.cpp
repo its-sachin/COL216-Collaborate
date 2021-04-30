@@ -2,6 +2,8 @@
 #include "Queue.cpp"
 
 Register *allReg;
+pair<int,int>* dependence;
+int* priority;
 
 class DRAM {
     public:
@@ -390,119 +392,38 @@ class DRAM {
     }
 
 
-    void doLS(vector<string> v, int coreID) {
-
-        if (isOn == false) {
-            clock += 1;
-            start(v,coreID);
-            return;
-        }
-
-        vector<pair<int,int>> all = allDep(v); 
-
-        if (all.empty()) {
-            relClock += 1;
-            clock += 1;
-            check();
-            if (isOn) {
-                initWaiter(v,coreID);
-            }
-            else if (isEmpty()){
-                start(v,coreID);
-            }
-            else {
-                initDep();
-                initWaiter(v,coreID);
-            }
-            return;
-        }
-
-        else {
-            regSteps += "\n  [Found Dependence]\n";
-            relClock = rowDelay;
-            check();
-            relClock = colDelay;
-            check();
-            doRow(rowNum, -1);
-
-            int i = 0;
-
-            for (auto& it : all ){
-                i += 1;
-                if (i == all.size()) {
-                    doRow(it.first, it.second);
-                }
-                else {
-                    doRow(it.first,-1);
-                }
-            }
-
-            all.clear();
-
-
-            clock += 1;
-            if (isOn == false) {
-                if (isEmpty()){
-                    start(v,coreID);
-                    return;
-                }
-
-                else {
-                    initDep();
-                    initWaiter(v,coreID);
-                }
-
-            }
-
-            else {
-                initWaiter(v,coreID);
-            }
-        }
-    }
-
-    void doLSnot(vector<string> v) {
+    void doIns(int N, vector<string> *arrayIns) {
         if (isOn) {
-            if (currIsDep(v)){
-                regSteps += "\n  [Found Dependence]\n";
-                relClock = rowDelay;
-                check();
-                relClock = colDelay;
-                check();
 
-                if (isEmpty()){
-                    clock += 1;
-                    return;
-                }
 
-                else {
-                    doDep(v);
-                    clock += 1;
-                }
-
-            }
-
-            else  {
-                if (isEmpty() || (depInRow(v,rowNum) == -1 && allDep(v).empty())){
-                    relClock += 1;
-                    clock += 1;
-                    check();
-                    return;
-                }
-
-                else {
-                    regSteps += "\n  [Found Dependence]\n";
-                    relClock = rowDelay;
-                    check();
-                    relClock = colDelay;
-                    check();
-                    doDep(v);
-                    clock += 1;
-                }
-            }
         }
 
         else {
-            clock += 1;
+            bool started = false;
+
+            if (arrayIns[currCore].size() != 0 && (arrayIns[currCore].at(0) == "lw" || arrayIns[currCore].at(0) == "sw")) {
+                started = true;
+                start(arrayIns[currCore],currCore);
+            }
+
+            for (int i =0; i< N; i++) {
+                if (arrayIns[i].size() !=0) {
+                    if ((arrayIns[i].at(0) == "lw" || arrayIns[i].at(0) == "sw") && i != currCore) {
+                        if (started == false) {
+                            start(arrayIns[i],i);
+                            started = true;
+                        }
+                        else {
+                            initWaiter(arrayIns[i],i);
+                        }
+                    }
+
+                    else {
+                        clock += 1;
+                    }
+                }
+            }
+
         }
     }
 

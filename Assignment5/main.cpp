@@ -50,7 +50,7 @@ vector<string> lineToken(string line) {
 
     //exucuting the file 
 
-bool executeInst(MIPS *programs){
+bool executeInst(int N,MIPS *programs){
 
     // int i= mainInst;
     // int n=instructions.size()+1;
@@ -249,6 +249,8 @@ int main(int argc, char const *argv[])
 
 
     allReg = new Register[N];
+    dependence = new pair<int,int>[N];
+    priority = new int[N];
     MIPS programs[N];
 
     for (int i =0; i< N; i++) {
@@ -304,7 +306,7 @@ int main(int argc, char const *argv[])
 
 
     
-    bool isDone = executeInst(programs);
+    bool isDone = executeInst(N,programs);
     if (isDone == false) {
         return -1;
     }
