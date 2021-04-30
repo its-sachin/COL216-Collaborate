@@ -425,50 +425,50 @@ class DRAM {
 
     void doIns(int N, vector<string> *arrayIns) {
         if (isOn) {
-             if (arrayIns[currCore].size() != 0 ) {
-                if (arrayIns[currCore].at(0) == "lw" || arrayIns[currCore].at(0) == "sw"){
-                    vector<pair<int,int>> all = allDep(arrayIns[currCore],currCore);
-                    //no dependency
-                    if (all.empty()) {
-                        relClock += 1;
-                        clock += 1;
-                        check();
-                        if (isOn) {
-                            initWaiter(arrayIns[currCore],currCore);
-                        }
-                        else if (isEmpty()){
-                            start(arrayIns[currCore],currCore);
-                        }
-                        else {
-                            initDep();
-                            initWaiter(arrayIns[currCore],currCore);
-                        }
-                    }
-                    //depenedency hence this core is now blocked
-                    else {  
-                          
-                    }        
-                }
-                else {
-                    //dependency found in the curr task
-                    if (currIsDep(arrayIns[currCore],currCore)){
-                    }
-                    else  {
-                        //no dependency here 
-                        if (isEmpty() || (depInRow(arrayIns[currCore],rowNum,currCore) == -1 && allDep(arrayIns[currCore],currCore).empty())){
+            for (int i =0; i< N; i++) {
+                if (arrayIns[i].size() != 0 ) {
+                    if (arrayIns[i].at(0) == "lw" || arrayIns[i].at(0) == "sw"){
+                        vector<pair<int,int>> all = allDep(arrayIns[i],i);
+                        //no dependency
+                        if (all.empty()) {
                             relClock += 1;
                             clock += 1;
                             check();
-                            return;
+                            if (isOn) {
+                                initWaiter(arrayIns[i],i);
+                            }
+                            else if (isEmpty()){
+                                start(arrayIns[i],i);
+                            }
+                            else {
+                                initDep();
+                                initWaiter(arrayIns[i],i);
+                            }
                         }
-                        // dependecy found                      
-                        else {
-
+                        //depenedency hence this core is now blocked
+                        else {                           
+                        }        
+                    }
+                    else {
+                        //dependency found in the curr task
+                        if (currIsDep(arrayIns[i],i)){
                         }
-                    }                  
-                }
-            }           
+                        else  {
+                            //no dependency here 
+                            if (isEmpty() || (depInRow(arrayIns[i],rowNum,i) == -1 && allDep(arrayIns[i],i).empty())){
+                                relClock += 1;
+                                clock += 1;
+                                check();
+                                return;
+                            }
+                            // dependecy found                      
+                            else {
+                            }
+                        }                  
+                    }
+                }          
 
+            }
         }
 
         else {
