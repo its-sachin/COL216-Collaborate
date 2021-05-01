@@ -3,7 +3,6 @@
 
 Register *allReg;
 pair<int,int>* dependence;
-int* priority;
 
 class DRAM {
     public:
@@ -16,6 +15,7 @@ class DRAM {
     int updates[2] = {0};
     bool rowDone = false;
 
+    vector<int> priority;
     int currCore;
     
     int memory[1024][256] = {0};
@@ -425,15 +425,15 @@ class DRAM {
 
     void doIns(int N, vector<string> *arrayIns) {
         if (isOn) {
+            relClock += 1;
+            clock += 1;
+            check();
             for (int i =0; i< N; i++) {
                 if (arrayIns[i].size() != 0 ) {
                     if (arrayIns[i].at(0) == "lw" || arrayIns[i].at(0) == "sw"){
                         vector<pair<int,int>> all = allDep(arrayIns[i],i);
                         //no dependency
                         if (all.empty()) {
-                            relClock += 1;
-                            clock += 1;
-                            check();
                             if (isOn) {
                                 initWaiter(arrayIns[i],i);
                             }
@@ -446,23 +446,23 @@ class DRAM {
                             }
                         }
                         //depenedency hence this core is now blocked
-                        else {                           
+                        else {  
+                            priority.push_back(i);
                         }        
                     }
                     else {
                         //dependency found in the curr task
                         if (currIsDep(arrayIns[i],i)){
+                            priority.push_back(i);
                         }
                         else  {
                             //no dependency here 
                             if (isEmpty() || (depInRow(arrayIns[i],rowNum,i) == -1 && allDep(arrayIns[i],i).empty())){
-                                relClock += 1;
-                                clock += 1;
-                                check();
-                                return;
+                                performInst(arrayIns[i],i);
                             }
                             // dependecy found                      
                             else {
+                                priority.push_back(i);
                             }
                         }                  
                     }
@@ -473,6 +473,7 @@ class DRAM {
 
         else {
             bool started = false;
+            clock+=1;
             for (int i =0; i< N; i++) {
                 if (arrayIns[i].size() !=0) {
                     if ((arrayIns[i].at(0) == "lw" || arrayIns[i].at(0) == "sw") && i != currCore) {
