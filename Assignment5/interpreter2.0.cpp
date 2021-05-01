@@ -20,6 +20,9 @@ class MIPS {
     int instCount[10] = {0}; 
     
     public:
+    unordered_map<int, vector<string>> getInstruction(){
+        return instructions;
+    }
 
     // ------------instruction handling--------------------------
 

@@ -266,7 +266,6 @@ int main(int argc, char const *argv[])
         int lineVal = 0;
         
         bool isMain = false;
-        bool isError = true;
         int mainInst = 1;
 
         while (getline(file,line)){
@@ -304,9 +303,17 @@ int main(int argc, char const *argv[])
             return -1;
         }
     }
+    bool isError=true;
+    for (int j=0;j<N;j++){
+        unordered_map<int, vector<string>> instructions=programs[j].getInstruction();
+        for (auto i = instructions.begin(); i != instructions.end(); i++){
+            isError=isError & programs[j].isError(i->second,i->first);
+            if (!isError){
+                return -1;
+            }
+        }
+    }
 
-
-    
     bool isDone = executeInst(N,programs);
     if (isDone == false) {
         return -1;
