@@ -4,6 +4,7 @@
 Register *allReg;
 pair<int,int>* dependence;
 
+bool *stuck;
 class DRAM {
     public:
     bool isOn;
@@ -430,8 +431,8 @@ class DRAM {
             check();
             for (int i =0; i< N; i++) {
                 if (arrayIns[i].size() != 0 ) {
+                    vector<pair<int,int>> all = allDep(arrayIns[i],i);
                     if (arrayIns[i].at(0) == "lw" || arrayIns[i].at(0) == "sw"){
-                        vector<pair<int,int>> all = allDep(arrayIns[i],i);
                         //no dependency
                         if (all.empty()) {
                             if (isOn) {
@@ -447,30 +448,30 @@ class DRAM {
                         }
                         //depenedency hence this core is now blocked
                         else {  
-                            priority.push_back(i);
+                            if (!stuck[i]){
+                                priority.push_back(i);
+                                stuck[i]=true;
+                            }
                         }        
                     }
                     else {
-                        //dependency found in the curr task
-                        if (currIsDep(arrayIns[i],i)){
-                            priority.push_back(i);
+                        //no dependency
+                        if (all.empty()){
+                            performInst(arrayIns[i],i);
                         }
-                        else  {
-                            //no dependency here 
-                            if (isEmpty() || (depInRow(arrayIns[i],rowNum,i) == -1 && allDep(arrayIns[i],i).empty())){
-                                performInst(arrayIns[i],i);
-                            }
-                            // dependecy found                      
-                            else {
+                        //dependency so this core  is blocked
+                        else {
+                            if (!stuck[i]){
                                 priority.push_back(i);
+                                stuck[i]=true;
                             }
                         }                  
                     }
                 }          
 
             }
+            handleBlock(arrayIns);
         }
-
         else {
             bool started = false;
             clock+=1;
@@ -490,6 +491,34 @@ class DRAM {
                     }
                 }
             }
+        }
+    }
+    void initTask(vector<string> inst,int coreNo) {
+        if (rowSort[rowNum].isEmpty()) {
+            for (int i =0; i< 1024; i++) {
+                if (depInRow(inst,i,coreNo)!=-1) {
+                    start(rowSort[i].pop());
+                }
+            }
+        }
+
+        else {
+            start(rowSort[rowNum].pop());
+        }
+    }
+    void handleBlock(vector<string> *arrayIns){
+        if (!isOn){
+            vector<pair<int,int>> all;          
+            while(!priority.empty()){
+                all = allDep(arrayIns[priority[0]],priority[0]);
+                if (all.empty()){
+                    priority.erase(priority.begin());
+                }
+            }
+            if (priority.empty()){
+                return;
+            }
+            initTask(arrayIns[priority[0]],priority[0]);
         }
     }
 

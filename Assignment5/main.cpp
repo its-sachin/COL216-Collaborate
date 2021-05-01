@@ -250,7 +250,8 @@ int main(int argc, char const *argv[])
 
     allReg = new Register[N];
     dependence = new pair<int,int>[N];
-    priority = new int[N];
+    stuck= new bool[N];
+    stuck={false};
     MIPS programs[N];
 
     for (int i =0; i< N; i++) {
