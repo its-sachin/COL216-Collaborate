@@ -440,14 +440,15 @@ class DRAM {
         else if (a=="j"){   
             int i = lables[v.at(1)];
             stuck[coreNo]=i;
+        }
     }
 
-    void doIns(int N, vector<string> *arrayIns,unordered_map<string, int> lables) {
+    void doIns(int N, vector<string> *arrayIns,unordered_map<string, int> *lables) {
         if (isOn) {
             relClock += 1;
             clock += 1;
             check();
-            for (int i =0; i< N && stuck[i]!=0; i++) {
+            for (int i =0; i< N; i++) {
                 if (arrayIns[i].size() != 0 ) {
                     vector<pair<int,int>> all = allDep(arrayIns[i],i);
                     if (arrayIns[i].at(0) == "lw" || arrayIns[i].at(0) == "sw"){
@@ -466,19 +467,23 @@ class DRAM {
                         }
                         //depenedency hence this core is now blocked
                         else {  
-                            priority.push_back(i);
-                            stuck[i]=0;
+                            if (stuck[i]!=0){
+                                priority.push_back(i);
+                                stuck[i]=0;
+                            }
                         }        
                     }
                     else {
                         //no dependency
                         if (all.empty()){
-                            performInst(arrayIns[i],i,lables);
+                            performInst(arrayIns[i],i,lables[i]);
                         }
                         //dependency so this core  is blocked
                         else {
-                            priority.push_back(i);
-                            stuck[i]=0;
+                            if (stuck[i]!=0){
+                                priority.push_back(i);
+                                stuck[i]=0;
+                            }
                         }                  
                     }
                 }          
@@ -500,7 +505,7 @@ class DRAM {
                         }
                     }
                     else {
-                        performInst(arrayIns[i],i,lables);
+                        performInst(arrayIns[i],i,lables[i]);
                     }
                 }
             }

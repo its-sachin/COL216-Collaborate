@@ -40,166 +40,61 @@ vector<string> lineToken(string line) {
 }
 
 
-// void doLSnot(vector<string> v) {
-//     ram.doLSnot(v);
-//     if ((allReg[coreNum].flag != -1)&& allReg[coreNum].flag == ram.clock){
-//         ram.clock += 1;
-//         allReg[coreNum].flag = -1;
-//     }
-// }
-
-    //exucuting the file 
-
-bool executeInst(int N,MIPS *programs){
-
-    // int i= mainInst;
-    // int n=instructions.size()+1;
-    // int k=1;
-    // string p;
-    // while(i<n){
-    //     vector<string> v=instructions.at(i);
-    //     auto pointer = lineCount.find(i);
-    //     k=pointer->second;
-    //     p = "";
-    //     // cout << "line " <<  k << endl;
-    //     // ram.p();
-    //     string a= v.at(0);
-    //     if (isError(v,k) ==false) {
-    //         return false;
-    //     }
-    //     if (a=="add"){
-    //         doLSnot(v);
-    //         allReg[coreNum].feedReg(v.at(1),allReg[coreNum].getRegValue(v.at(3))+allReg[coreNum].getRegValue(v.at(5)));
-    //         instCount[0] += 1;
-    //         i++;
-    //     }
-    //     else if (a=="sub"){
-    //         doLSnot(v);
-    //         allReg[coreNum].feedReg(v.at(1),allReg[coreNum].getRegValue(v.at(3))-allReg[coreNum].getRegValue(v.at(5)));
-    //         instCount[2] += 1;
-    //         i++;
-    //     }
-    //     else if (a=="mul"){
-    //         doLSnot(v);
-    //         allReg[coreNum].feedReg(v.at(1),allReg[coreNum].getRegValue(v.at(3))*allReg[coreNum].getRegValue(v.at(5)));
-    //         instCount[3] += 1;
-    //         i++;              
-    //     }
-    //     else if (a=="addi"){
-    //         doLSnot(v);
-    //         allReg[coreNum].feedReg(v.at(1),allReg[coreNum].getRegValue(v.at(3))+stoi(v.at(5)));
-    //         instCount[1] += 1;
-    //         i++;               
-    //     }
-    //     else if (a=="lw" || a=="sw"){
-
-    //         // -----------------------------------ass4-addition------------------------------------------------
-    //         int add;
-    //         if (v.size() == 6) {
-    //             add = allReg[coreNum].getRegValue(v.at(4));
-    //         }
-    //         else if (v.size() == 7) {
-    //             add = allReg[coreNum].getRegValue(v.at(5))+stoi(v.at(3));
-    //         }
-
-    //         if (add%4 !=0 || add<0 || add >= 4*1024*256) {
-    //             cout << "INVALID address of memory at line "<< k<<endl;
-    //             return false;
-    //         }
-    //         // if (ram.isFul()) {
-    //         //     cout << "DRAM Queue full!!"<< endl;
-    //         //     return false;
-    //         // }
-    //         ram.doLS(v,coreNum);
-    //         p = "\n  DRAM request issued";
-    //         i++;
-    //         if (a == "sw"){
-    //             instCount[8] += 1;    
-                
-    //         }
-    //         else {
-    //             instCount[7] += 1;
-                
-    //         }
-    //     }
-    //     else if (a=="j"){
-
-    //         //  ---------------------------------ass4-addition-------------------------------------------
-
-    //         int a = labelLine[v.at(1)];
-    //         ram.clock += 1;
-    //         ram.relClock += 1;
-    //         ram.check();
-    //         instCount[9] += 1;
-    //         i=a;
-    //         p = "   Jumping to line: " + to_string(lineCount[i]);
-
-
-    //     }
-    //     else if (a=="beq"){
-
-    //         ram.doLSnot(v);
-    //         // ---------------------------------ass4-addition----------------------------------------------------
-
-    //         if (allReg[coreNum].getRegValue(v.at(1))==allReg[coreNum].getRegValue(v.at(3))){
-    //             i=labelLine[v.at(5)];
-    //             p = "   Jumping to line: " + to_string(lineCount[i]);
-    //         }
-
-    //         else {
-    //             p = "   No jumping";
-    //             i++;
-    //         }
-    //         instCount[4] += 1;
-    //     }
-    //     else if (a=="bne"){
-
-    //         ram.doLSnot(v);
-    //         // ---------------------------------ass4-addition----------------------------------------------------
-
-    //         if (allReg[coreNum].getRegValue(v.at(1))!=allReg[coreNum].getRegValue(v.at(3))){
-    //             i=labelLine[v.at(5)];
-    //             p = "   Jumping to line: " + to_string(lineCount[i]);
-    //         }
-
-    //         else {
-    //             p = "   No jumping";
-    //             i++;
-    //         } 
-    //         instCount[5] += 1;              
-    //     }
-    //     else if (a=="slt"){
-
-    //         doLSnot(v);
-    //         if (allReg[coreNum].getRegValue(v.at(3))<allReg[coreNum].getRegValue(v.at(5))){
-    //             allReg[coreNum].feedReg(v.at(1),1);
-    //         }
-    //         else {
-    //             allReg[coreNum].feedReg(v.at(1),0);
-    //         }  
-    //         i++; 
-
-    //         instCount[6] += 1;          
-    //     }
-    //     else {
-    //         cout<<"Unrecognised operation at line no."<<i<<endl;
-    //         return false;
-    //         break;
-    //     } 
-        
-    //     printRegSet2(k,v,ram.regSteps,p);
-    //     ram.regSteps = "";
-    // }
-
-    // if (ram.isOn == true){
-    //     ram.doAll();
-    //     regSteps += ram.regSteps + "\n";
-    // }
-    // if (ram.updated == false) {
-    //     ram.finalWrite();
-    // }
+bool checkFinished(int N){
+    for(int i=0;i<N;i++){
+        if (stuck[i]!=-2){
+            return false;
+        }
+    }
     return true;
+}
 
+bool executeInst(int N,MIPS *programs,DRAM ram,int M){
+    vector<string> arayIns[N];
+    int arr[N]={0};
+    unordered_map<string, int> lables[N];
+    while (true){
+        if (ram.clock==0){
+            for (int i=0;i<N;i++){
+                arr[i]=programs[i].mainInst;
+                arayIns[i]=programs[i].getInst(programs[i].mainInst);
+                lables[i]=programs[i].getLabelLine();
+            }
+        }
+        else if (ram.clock>M){
+            return true;
+        }
+        else {
+            if (checkFinished(N)){
+                return true;
+            }
+            else {
+                for (int i=0;i<N;i++){
+                    if (stuck[i]==-1){
+                        if (arr[i]+1>programs[i].getInstruction().size()){
+                            stuck[i]=-2;
+                            vector<string> tombstone;
+                            arayIns[i]=tombstone;
+                        }
+                        else {
+                            arr[i]=arr[i]+1;
+                            arayIns[i]=programs[i].getInst(arr[i]);
+                        }
+                    }
+                    else if (stuck[i]==0 || stuck[i]==-2){
+                        continue;
+                    } 
+                    else {
+                        arr[i]=stuck[i];
+                        arayIns[i]=programs[i].getInst(stuck[i]);
+                        stuck[i]=1;
+                    }          
+                }
+            }
+        }
+        ram.doIns(N,arayIns,lables);
+    }
+    return true;
 }
 
 
@@ -302,6 +197,7 @@ int main(int argc, char const *argv[])
             cout<< "Missing Main Label in file of core: "<< i+1 << endl;
             return -1;
         }
+        programs[i].mainInst=mainInst;
     }
     for (int j=0;j<N;j++){
         unordered_map<int, vector<string>> instructions=programs[j].getInstruction();
@@ -313,7 +209,7 @@ int main(int argc, char const *argv[])
         }
     }
 
-    bool isDone = executeInst(N,programs);
+    bool isDone = executeInst(N,programs,ram,M);
     if (isDone == false) {
         return -1;
     }
