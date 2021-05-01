@@ -250,10 +250,10 @@ int main(int argc, char const *argv[])
 
     allReg = new Register[N];
     dependence = new pair<int,int>[N];
-    stuck= new bool[N];
-    *stuck={false};
+    stuck= new int[N];
+    *stuck={-1};
     MIPS programs[N];
-
+    bool isError=true;
     for (int i =0; i< N; i++) {
         allReg[i].coreNumber = i;
         programs[i].init(i);
@@ -303,11 +303,10 @@ int main(int argc, char const *argv[])
             return -1;
         }
     }
-    bool isError=true;
     for (int j=0;j<N;j++){
         unordered_map<int, vector<string>> instructions=programs[j].getInstruction();
         for (auto i = instructions.begin(); i != instructions.end(); i++){
-            isError=isError & programs[j].isError(i->second,i->first);
+            isError=isError && programs[j].isError(i->second,i->first);
             if (!isError){
                 return -1;
             }

@@ -4,7 +4,7 @@
 Register *allReg;
 pair<int,int>* dependence;
 
-bool *stuck;
+int *stuck;
 class DRAM {
     public:
     bool isOn;
@@ -311,6 +311,9 @@ class DRAM {
                 }
             }
         }
+        if (currIsDep(v,coreNo) && isOn){
+            ans.push_back(make_pair(rowNum,-1));
+        }
         return ans;
     }
 
@@ -398,38 +401,53 @@ class DRAM {
         }
     }
 
-    void performInst(vector<string> v,int coreNo){
+    void performInst(vector<string> v,int coreNo,unordered_map<string, int> lables){
         string a= v.at(0);
-        if (!isOn){
-            if (a=="add"){
-                allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))+allReg[coreNo].getRegValue(v.at(5)));
+        if (a=="add"){
+            allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))+allReg[coreNo].getRegValue(v.at(5)));
+        }
+        else if (a=="sub"){
+            allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))-allReg[coreNo].getRegValue(v.at(5)));
+        }
+        else if (a=="mul"){        
+            allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))*allReg[coreNo].getRegValue(v.at(5)));
+        }
+        else if (a=="addi"){
+            allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))+stoi(v.at(5)));               
+        }
+        else if (a=="slt"){
+            if (allReg[coreNo].getRegValue(v.at(3))<allReg[coreNo].getRegValue(v.at(5))){
+                allReg[coreNo].feedReg(v.at(1),1);
             }
-            else if (a=="sub"){
-                allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))-allReg[coreNo].getRegValue(v.at(5)));
-            }
-            else if (a=="mul"){        
-                allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))*allReg[coreNo].getRegValue(v.at(5)));
-            }
-            else if (a=="addi"){
-                allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))+stoi(v.at(5)));               
-            }
-            else if (a=="slt"){
-                if (allReg[coreNo].getRegValue(v.at(3))<allReg[coreNo].getRegValue(v.at(5))){
-                   allReg[coreNo].feedReg(v.at(1),1);
-                }
-                else {
-                   allReg[coreNo].feedReg(v.at(1),0);
-                }        
+            else {
+                allReg[coreNo].feedReg(v.at(1),0);
+            }        
+        }
+        else if (a=="beq"){
+
+            if (allReg[coreNo].getRegValue(v.at(1))==allReg[coreNo].getRegValue(v.at(3))){
+                int i=lables[v.at(5)];
+                stuck[coreNo]=i;
             }
         }
+        else if (a=="bne"){
+
+            if (allReg[coreNo].getRegValue(v.at(1))!=allReg[coreNo].getRegValue(v.at(3))){
+                int i=lables[v.at(5)];  
+                stuck[coreNo]=i;
+            }
+        }
+        else if (a=="j"){   
+            int i = lables[v.at(1)];
+            stuck[coreNo]=i;
     }
 
-    void doIns(int N, vector<string> *arrayIns) {
+    void doIns(int N, vector<string> *arrayIns,unordered_map<string, int> lables) {
         if (isOn) {
             relClock += 1;
             clock += 1;
             check();
-            for (int i =0; i< N; i++) {
+            for (int i =0; i< N && stuck[i]!=0; i++) {
                 if (arrayIns[i].size() != 0 ) {
                     vector<pair<int,int>> all = allDep(arrayIns[i],i);
                     if (arrayIns[i].at(0) == "lw" || arrayIns[i].at(0) == "sw"){
@@ -448,29 +466,24 @@ class DRAM {
                         }
                         //depenedency hence this core is now blocked
                         else {  
-                            if (!stuck[i]){
-                                priority.push_back(i);
-                                stuck[i]=true;
-                            }
+                            priority.push_back(i);
+                            stuck[i]=0;
                         }        
                     }
                     else {
                         //no dependency
                         if (all.empty()){
-                            performInst(arrayIns[i],i);
+                            performInst(arrayIns[i],i,lables);
                         }
                         //dependency so this core  is blocked
                         else {
-                            if (!stuck[i]){
-                                priority.push_back(i);
-                                stuck[i]=true;
-                            }
+                            priority.push_back(i);
+                            stuck[i]=0;
                         }                  
                     }
                 }          
-
-            }
             handleBlock(arrayIns);
+            }
         }
         else {
             bool started = false;
@@ -487,7 +500,7 @@ class DRAM {
                         }
                     }
                     else {
-                        performInst(arrayIns[i],i);
+                        performInst(arrayIns[i],i,lables);
                     }
                 }
             }
@@ -512,6 +525,7 @@ class DRAM {
             while(!priority.empty()){
                 all = allDep(arrayIns[priority[0]],priority[0]);
                 if (all.empty()){
+                    stuck[priority[0]]=-1;
                     priority.erase(priority.begin());
                 }
             }
