@@ -2,9 +2,9 @@
 #include "Queue.cpp"
 
 Register *allReg;
-vector<pair<int,int>>* dependence;
-int* priority;
+pair<int,int>* dependence;
 
+int *stuck;
 class DRAM {
     public:
     bool isOn;
@@ -16,6 +16,7 @@ class DRAM {
     int updates[2] = {0};
     bool rowDone = false;
 
+    vector<int> priority;
     int currCore;
     
     int memory[1024][256] = {0};
@@ -152,7 +153,7 @@ class DRAM {
     }
 
 
-   void initWaiter(vector<string> v, int coreID) {
+    void initWaiter(vector<string> v, int coreID) {
         Waiter w;
         w.inst = v;
         w.changeReg  = v.at(1);
@@ -175,7 +176,10 @@ class DRAM {
         rowSort[w.rowNum].add(w);
     }
 
-    bool currIsDep(vector<string> v) {
+    bool currIsDep(vector<string> v,int coreNo) {
+        if (currCore!=coreNo){
+            return false;
+        }
         string task = v.at(0);
         if (task == "add" || task == "addi" || task == "mul" || task == "sub" || task == "slt") {
             if (addressReg == v.at(1) || changeReg == v.at(1) || (currInst.at(0) == "lw" && (changeReg == v.at(3) || changeReg == v.at(5)))){
@@ -228,7 +232,10 @@ class DRAM {
         return false;
     }
 
-    bool isDep(vector<string> v, Waiter w) {
+    bool isDep(vector<string> v, Waiter w,int coreNo) {
+        if (w.coreID!=coreNo){
+            return false;
+        }
         string task = v.at(0);
         if (task == "add" || task == "addi" || task == "mul" || task == "sub" || task == "slt") {
             if (w.addressReg == v.at(1) || w.changeReg == v.at(1) || (w.inst.at(0) == "lw" && (w.changeReg == v.at(3) || w.changeReg == v.at(5)))){
@@ -280,29 +287,32 @@ class DRAM {
         return false;
     }
 
-    int depInRow(vector<string> v, int row){
+    int depInRow(vector<string> v, int row, int coreNo){
         if (rowSort[row].isEmpty()){
             return -1;
         }
         int r = rowSort[row].getr();
         int f = rowSort[row].getf();
         for (int i = f; i != r; i = (i+1)%rowSort[row].N){
-            if (isDep(v, rowSort[row].Q[r+f-i-1])){
+            if (isDep(v, rowSort[row].Q[r+f-i-1],coreNo)){
                 return (r+f-1-i);
             }
         }
         return -1;
     }
 
-    vector<pair<int,int>> allDep(vector<string> v) {
+    vector<pair<int,int>> allDep(vector<string> v,int coreNo) {
         vector<pair<int,int>> ans;
         for (int i = 0; i < 1024; i++ ) {
             if (i != rowNum) {
-                int curr = depInRow(v, i); 
+                int curr = depInRow(v, i,coreNo); 
                 if (curr != -1) {
                     ans.push_back(make_pair(i,curr));
                 }
             }
+        }
+        if (currIsDep(v,coreNo) && isOn){
+            ans.push_back(make_pair(rowNum,-1));
         }
         return ans;
     }
@@ -339,8 +349,8 @@ class DRAM {
         }
     }
 
-    void doDep(vector<string> v) {
-        vector<pair<int,int>> all = allDep(v); 
+    void doDep(vector<string> v, int coreNo) {
+        vector<pair<int,int>> all = allDep(v,coreNo); 
         if (all.empty()) {
             if (rowSort[rowNum].isEmpty()) {
                 for (int i =0; i< 1024; i++) {
@@ -350,7 +360,7 @@ class DRAM {
                 }
             }
             else {
-                int curr = depInRow(v, rowNum) ;
+                int curr = depInRow(v, rowNum,coreNo) ;
                 if (curr== -1) {
                     start(rowSort[rowNum].pop());
                 }
@@ -391,87 +401,98 @@ class DRAM {
         }
     }
 
-    bool isStuck(int core, int N) {
-        for (int i=0; i <N; i++) {
-            if (priority[i] == 0) {
-                return false;
+    void performInst(vector<string> v,int coreNo,unordered_map<string, int> lables){
+        string a= v.at(0);
+        if (a=="add"){
+            allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))+allReg[coreNo].getRegValue(v.at(5)));
+        }
+        else if (a=="sub"){
+            allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))-allReg[coreNo].getRegValue(v.at(5)));
+        }
+        else if (a=="mul"){        
+            allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))*allReg[coreNo].getRegValue(v.at(5)));
+        }
+        else if (a=="addi"){
+            allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))+stoi(v.at(5)));               
+        }
+        else if (a=="slt"){
+            if (allReg[coreNo].getRegValue(v.at(3))<allReg[coreNo].getRegValue(v.at(5))){
+                allReg[coreNo].feedReg(v.at(1),1);
             }
+            else {
+                allReg[coreNo].feedReg(v.at(1),0);
+            }        
+        }
+        else if (a=="beq"){
 
-            if (priority[i] == core) {
-                return true;
+            if (allReg[coreNo].getRegValue(v.at(1))==allReg[coreNo].getRegValue(v.at(3))){
+                int i=lables[v.at(5)];
+                stuck[coreNo]=i;
             }
         }
-        return false;
-    }
+        else if (a=="bne"){
 
-    void addPriority(int core, int N) {
-        for (int i=0; i< N; i++) {
-            if (priority[i] == 0) {
-                priority[i] = core;
-                return;
+            if (allReg[coreNo].getRegValue(v.at(1))!=allReg[coreNo].getRegValue(v.at(3))){
+                int i=lables[v.at(5)];  
+                stuck[coreNo]=i;
             }
         }
-    }
-
-    void updateDep(int N) {
-        for (int i=0; i< N; i++) {
-            if (dependence[i][])
+        else if (a=="j"){   
+            int i = lables[v.at(1)];
+            stuck[coreNo]=i;
         }
     }
 
-
-    void doIns(int N, vector<string> *arrayIns) {
+    void doIns(int N, vector<string> *arrayIns,unordered_map<string, int> *lables) {
         if (isOn) {
-
-            for (int i=0; i< N; i++) {
-                if (!isStuck(i,N)) {
-
-                    bool thisDep = currIsDep(arrayIns[i]);
-                    int thisRow = depInRow(arrayIns[i],rowNum);
-                    vector<pair<int,int>> all = allDep(arrayIns[i]);
-
-                    if (arrayIns[i].at(0) != "lw" && arrayIns[i].at(0) != "sw") {
-                        all.push_back({rowNum,thisRow});
-                    }
-                    
-
-                    if (thisDep || depInRow(arrayIns[i],rowNum) || !all.empty()) {
-
-                        // add dependency info
-                        dependence[i] = all;
-                        // add priority
-                        addPriority(i,N);
-                    }
-
-                    else {
-                        if (arrayIns[i].at(0) == "lw" || arrayIns[i].at(0) == "sw") {
-                            initWaiter(arrayIns[i],i);
+            relClock += 1;
+            clock += 1;
+            check();
+            for (int i =0; i< N; i++) {
+                if (arrayIns[i].size() != 0 ) {
+                    vector<pair<int,int>> all = allDep(arrayIns[i],i);
+                    if (arrayIns[i].at(0) == "lw" || arrayIns[i].at(0) == "sw"){
+                        //no dependency
+                        if (all.empty()) {
+                            if (isOn) {
+                                initWaiter(arrayIns[i],i);
+                            }
+                            else if (isEmpty()){
+                                start(arrayIns[i],i);
+                            }
+                            else {
+                                initDep();
+                                initWaiter(arrayIns[i],i);
+                            }
                         }
+                        //depenedency hence this core is now blocked
+                        else {  
+                            if (stuck[i]!=0){
+                                priority.push_back(i);
+                                stuck[i]=0;
+                            }
+                        }        
                     }
-
-                    clock += 1;
-                    relClock += 1;
-                    check();
-
-                    if (!isOn && !isEmpty()) {
-                        initDep();
+                    else {
+                        //no dependency
+                        if (all.empty()){
+                            performInst(arrayIns[i],i,lables[i]);
+                        }
+                        //dependency so this core  is blocked
+                        else {
+                            if (stuck[i]!=0){
+                                priority.push_back(i);
+                                stuck[i]=0;
+                            }
+                        }                  
                     }
-
-                    updateDep(N);
-                }
+                }          
+            handleBlock(arrayIns);
             }
-
-
         }
-
         else {
             bool started = false;
-
-            if (arrayIns[currCore].size() != 0 && (arrayIns[currCore].at(0) == "lw" || arrayIns[currCore].at(0) == "sw")) {
-                started = true;
-                start(arrayIns[currCore],currCore);
-            }
-
+            clock+=1;
             for (int i =0; i< N; i++) {
                 if (arrayIns[i].size() !=0) {
                     if ((arrayIns[i].at(0) == "lw" || arrayIns[i].at(0) == "sw") && i != currCore) {
@@ -483,10 +504,46 @@ class DRAM {
                             initWaiter(arrayIns[i],i);
                         }
                     }
+<<<<<<< HEAD
                 }
             }
             clock += 1;
+=======
+                    else {
+                        performInst(arrayIns[i],i,lables[i]);
+                    }
+                }
+            }
+        }
+    }
+    void initTask(vector<string> inst,int coreNo) {
+        if (rowSort[rowNum].isEmpty()) {
+            for (int i =0; i< 1024; i++) {
+                if (depInRow(inst,i,coreNo)!=-1) {
+                    start(rowSort[i].pop());
+                }
+            }
+        }
+>>>>>>> e158bc9530635d4d976a83bbc07973234ccd1cd0
 
+        else {
+            start(rowSort[rowNum].pop());
+        }
+    }
+    void handleBlock(vector<string> *arrayIns){
+        if (!isOn){
+            vector<pair<int,int>> all;          
+            while(!priority.empty()){
+                all = allDep(arrayIns[priority[0]],priority[0]);
+                if (all.empty()){
+                    stuck[priority[0]]=-1;
+                    priority.erase(priority.begin());
+                }
+            }
+            if (priority.empty()){
+                return;
+            }
+            initTask(arrayIns[priority[0]],priority[0]);
         }
     }
 

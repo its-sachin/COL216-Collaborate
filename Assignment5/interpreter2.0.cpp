@@ -20,9 +20,16 @@ class MIPS {
     int instCount[10] = {0}; 
     
     public:
+    int mainInst;
+    unordered_map<int, vector<string>> getInstruction(){
+        return instructions;
+    }
 
     // ------------instruction handling--------------------------
 
+    unordered_map<string, int> getLabelLine(){
+        return labelLine;
+    }
     vector<string> getInst(int line){
         
         unordered_map<int, vector<string>>:: iterator it = instructions.find(line);

@@ -9,6 +9,7 @@
         "unordered_map": "cpp",
         "vector": "cpp",
         "*.tcc": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "iosfwd": "cpp"
     }
 }
