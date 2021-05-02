@@ -504,11 +504,6 @@ class DRAM {
                             initWaiter(arrayIns[i],i);
                         }
                     }
-<<<<<<< HEAD
-                }
-            }
-            clock += 1;
-=======
                     else {
                         performInst(arrayIns[i],i,lables[i]);
                     }
@@ -524,7 +519,6 @@ class DRAM {
                 }
             }
         }
->>>>>>> e158bc9530635d4d976a83bbc07973234ccd1cd0
 
         else {
             start(rowSort[rowNum].pop());
