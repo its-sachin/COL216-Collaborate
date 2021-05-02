@@ -249,8 +249,9 @@ int main(int argc, char const *argv[])
 
 
     allReg = new Register[N];
-    dependence = new pair<int,int>[N];
+    dependence = new vector<pair<int,int>>[N];
     priority = new int[N];
+    priority = {0};
     MIPS programs[N];
 
     for (int i =0; i< N; i++) {

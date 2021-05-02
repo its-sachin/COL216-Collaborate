@@ -2,7 +2,7 @@
 #include "Queue.cpp"
 
 Register *allReg;
-pair<int,int>* dependence;
+vector<pair<int,int>>* dependence;
 int* priority;
 
 class DRAM {
@@ -391,9 +391,75 @@ class DRAM {
         }
     }
 
+    bool isStuck(int core, int N) {
+        for (int i=0; i <N; i++) {
+            if (priority[i] == 0) {
+                return false;
+            }
+
+            if (priority[i] == core) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void addPriority(int core, int N) {
+        for (int i=0; i< N; i++) {
+            if (priority[i] == 0) {
+                priority[i] = core;
+                return;
+            }
+        }
+    }
+
+    void updateDep(int N) {
+        for (int i=0; i< N; i++) {
+            if (dependence[i][])
+        }
+    }
+
 
     void doIns(int N, vector<string> *arrayIns) {
         if (isOn) {
+
+            for (int i=0; i< N; i++) {
+                if (!isStuck(i,N)) {
+
+                    bool thisDep = currIsDep(arrayIns[i]);
+                    int thisRow = depInRow(arrayIns[i],rowNum);
+                    vector<pair<int,int>> all = allDep(arrayIns[i]);
+
+                    if (arrayIns[i].at(0) != "lw" && arrayIns[i].at(0) != "sw") {
+                        all.push_back({rowNum,thisRow});
+                    }
+                    
+
+                    if (thisDep || depInRow(arrayIns[i],rowNum) || !all.empty()) {
+
+                        // add dependency info
+                        dependence[i] = all;
+                        // add priority
+                        addPriority(i,N);
+                    }
+
+                    else {
+                        if (arrayIns[i].at(0) == "lw" || arrayIns[i].at(0) == "sw") {
+                            initWaiter(arrayIns[i],i);
+                        }
+                    }
+
+                    clock += 1;
+                    relClock += 1;
+                    check();
+
+                    if (!isOn && !isEmpty()) {
+                        initDep();
+                    }
+
+                    updateDep(N);
+                }
+            }
 
 
         }
@@ -417,12 +483,9 @@ class DRAM {
                             initWaiter(arrayIns[i],i);
                         }
                     }
-
-                    else {
-                        clock += 1;
-                    }
                 }
             }
+            clock += 1;
 
         }
     }
