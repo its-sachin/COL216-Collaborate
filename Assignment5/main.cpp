@@ -49,7 +49,7 @@ bool checkFinished(int N){
     return true;
 }
 
-bool executeInst(int N,MIPS *programs,DRAM ram,int M){
+bool executeInst(int N,MIPS *programs,int M){
     vector<string> arayIns[N];
     int arr[N]={0};
     unordered_map<string, int> lables[N];
@@ -59,6 +59,7 @@ bool executeInst(int N,MIPS *programs,DRAM ram,int M){
                 arr[i]=programs[i].mainInst;
                 arayIns[i]=programs[i].getInst(programs[i].mainInst);
                 lables[i]=programs[i].getLabelLine();
+                programs[i].printRegSet2(arr[i], arayIns[i], ram.regSteps, "");
             }
         }
         else if (ram.clock>M){
@@ -66,19 +67,25 @@ bool executeInst(int N,MIPS *programs,DRAM ram,int M){
         }
         else {
             if (checkFinished(N)){
+                // all programs done
                 return true;
             }
             else {
                 for (int i=0;i<N;i++){
                     if (stuck[i]==-1){
+                        // this core is done
                         if (arr[i]+1>programs[i].getInstruction().size()){
                             stuck[i]=-2;
                             vector<string> tombstone;
                             arayIns[i]=tombstone;
                         }
+
+                        // this core neither stuck nor done 
                         else {
                             arr[i]=arr[i]+1;
                             arayIns[i]=programs[i].getInst(arr[i]);
+                    
+                            programs[i].printRegSet2(arr[i], arayIns[i], ram.regSteps, "");
                         }
                     }
                     else if (stuck[i]==0 || stuck[i]==-2){
@@ -209,7 +216,7 @@ int main(int argc, char const *argv[])
         }
     }
 
-    bool isDone = executeInst(N,programs,ram,M);
+    bool isDone = executeInst(N,programs,M);
     if (isDone == false) {
         return -1;
     }
