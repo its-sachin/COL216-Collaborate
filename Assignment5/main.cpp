@@ -88,13 +88,17 @@ bool executeInst(int N,MIPS *programs,int M){
                             programs[i].printRegSet2(arr[i], arayIns[i], ram.regSteps, "");
                         }
                     }
+
+                    // stuck or done
                     else if (stuck[i]==0 || stuck[i]==-2){
                         continue;
                     } 
+
+                    // jump
                     else {
                         arr[i]=stuck[i];
                         arayIns[i]=programs[i].getInst(stuck[i]);
-                        stuck[i]=1;
+                        stuck[i]=-1;
                     }          
                 }
             }

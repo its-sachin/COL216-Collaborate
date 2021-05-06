@@ -304,11 +304,9 @@ class DRAM {
     vector<pair<int,int>> allDep(vector<string> v,int coreNo) {
         vector<pair<int,int>> ans;
         for (int i = 0; i < 1024; i++ ) {
-            if (i != rowNum) {
-                int curr = depInRow(v, i,coreNo); 
-                if (curr != -1) {
-                    ans.push_back(make_pair(i,curr));
-                }
+            int curr = depInRow(v, i,coreNo); 
+            if (curr != -1) {
+                ans.push_back(make_pair(i,curr));
             }
         }
         if (currIsDep(v,coreNo) && isOn){
@@ -385,11 +383,13 @@ class DRAM {
 
             for (auto& it : all ){
                 i += 1;
-                if (i == all.size()) {
-                    doRow(it.first, it.second);
-                }
-                else {
-                    doRow(it.first,-1);
+                if (it.first != rowNum) {
+                    if (i == all.size()) {
+                        doRow(it.first, it.second);
+                    }
+                    else {
+                        doRow(it.first,-1);
+                    }
                 }
             }
 
