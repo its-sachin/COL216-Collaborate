@@ -49,25 +49,58 @@ bool checkFinished(int N){
     return true;
 }
 
-bool executeInst(int N,MIPS *programs,int M){
+bool executeInst(int N,int M){
     vector<string> arayIns[N];
-    int arr[N]={0};
     unordered_map<string, int> lables[N];
+    int lineNo[N] = {0};
+    int arr[N]={0};
+    int pc = 0;
+
     while (true){
+
         if (ram.clock==0){
+
             for (int i=0;i<N;i++){
-                arr[i]=programs[i].mainInst;
-                arayIns[i]=programs[i].getInst(programs[i].mainInst);
-                lables[i]=programs[i].getLabelLine();
-                programs[i].printRegSet2(arr[i], arayIns[i], ram.regSteps, "");
+
+                pc = programs[i].mainInst;
+                arayIns[i] = programs[i].getInst(pc);
+                lineNo[i] = programs[i].getLine(pc);
+                arr[i] = pc;
             }
         }
-        else if (ram.clock>M){
+        else if (ram.clock>=M){
+            string p = "------------------------------------Stopping the execution-------------------------------------";
+            if (ram.isOn) {
+                string a;
+                for (auto& it : ram.currInst) { 
+                    a = a + " " +  it; 
+                }
+                p += "\n";
+                p += "\n  [DRAM Execution going on: " + a+  ']';
+                p += "\n  [Row active: " + to_string(ram.rowNum) + "]";
+                string temp = "";
+                int total = 0;
+                int curr = 0;
+                for (int i =0; i< 1024; i++) {
+                    if (!ram.rowSort[i].isEmpty()) {
+                        curr = ram.rowSort[i].size();
+                        total += curr;
+                        temp += to_string(i) + ":" + to_string(curr) + " ";
+                    }
+                }
+                p = p + "\n  [Instructions in queue: " + to_string(curr) + " (" + temp + ")]";
+                if (!ram.isEmpty()) {
+                    p += "\n  [Queue: \n";
+                    p += ram.printQ() + "  ]";
+                }
+            }   
+            ram.regSteps = p + "\n";
             return true;
         }
         else {
             if (checkFinished(N)){
                 // all programs done
+                ram.regSteps ="---------------------------------------Execution complete----------------------------------\n";
                 return true;
             }
             else {
@@ -76,16 +109,14 @@ bool executeInst(int N,MIPS *programs,int M){
                         // this core is done
                         if (arr[i]+1>programs[i].getInstruction().size()){
                             stuck[i]=-2;
-                            vector<string> tombstone;
-                            arayIns[i]=tombstone;
                         }
 
                         // this core neither stuck nor done 
                         else {
-                            arr[i]=arr[i]+1;
-                            arayIns[i]=programs[i].getInst(arr[i]);
-                    
-                            programs[i].printRegSet2(arr[i], arayIns[i], ram.regSteps, "");
+                            pc = arr[i]+1;
+                            arayIns[i]=programs[i].getInst(pc);
+                            lineNo[i] = programs[i].getLine(pc);
+                            arr[i] = pc;
                         }
                     }
 
@@ -96,14 +127,16 @@ bool executeInst(int N,MIPS *programs,int M){
 
                     // jump
                     else {
-                        arr[i]=stuck[i];
-                        arayIns[i]=programs[i].getInst(stuck[i]);
+                        pc = stuck[i];
+                        arayIns[i]=programs[i].getInst(pc);
+                        lineNo[i] = programs[i].getLine(pc);
+                        arr[i] = pc;
                         stuck[i]=-1;
-                    }          
+                    }         
                 }
             }
         }
-        ram.doIns(N,arayIns,lables);
+        ram.doIns(N,arayIns,lineNo);
     }
     return true;
 }
@@ -157,9 +190,13 @@ int main(int argc, char const *argv[])
     allReg = new Register[N];
     dependence = new pair<int,int>[N];
     stuck= new int[N];
-    *stuck={-1};
-    MIPS programs[N];
-    bool isError=true;
+    for (int i=0; i< N; i++) {
+        stuck[i] = -1;
+    }
+    programs = new MIPS[N];
+
+
+    
     for (int i =0; i< N; i++) {
         allReg[i].coreNumber = i;
         programs[i].init(i);
@@ -170,14 +207,13 @@ int main(int argc, char const *argv[])
 
         int addressVal = 0;
         int lineVal = 0;
+
+        bool isError=true;
         
         bool isMain = false;
         int mainInst = 1;
 
         while (getline(file,line)){
-            if (!isError) {
-                return -1;
-            }
             vector<string> currLine = lineToken(line);
             if (currLine.size() ==0 || int(currLine.at(0).at(0)) == 0){
                 lineVal += 1;
@@ -200,7 +236,6 @@ int main(int argc, char const *argv[])
                 lineVal += 1;
                 programs[i].setInst(addressVal,currLine);
                 programs[i].setInstLine(addressVal,lineVal);
-                isError = isError & programs[i].isError(currLine,lineVal);
             }
         }
 
@@ -209,18 +244,18 @@ int main(int argc, char const *argv[])
             return -1;
         }
         programs[i].mainInst=mainInst;
-    }
-    for (int j=0;j<N;j++){
-        unordered_map<int, vector<string>> instructions=programs[j].getInstruction();
-        for (auto i = instructions.begin(); i != instructions.end(); i++){
-            isError=isError && programs[j].isError(i->second,i->first);
+
+        unordered_map<int, vector<string>> instructions=programs[i].getInstruction();
+        for (auto j = instructions.begin(); j != instructions.end(); j++){
+            isError=isError && programs[i].isError(j->second,programs[i].getLine(j->first));
             if (!isError){
                 return -1;
             }
         }
+
     }
 
-    bool isDone = executeInst(N,programs,M);
+    bool isDone = executeInst(N,M);
     if (isDone == false) {
         return -1;
     }

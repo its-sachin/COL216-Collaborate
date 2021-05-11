@@ -1,10 +1,11 @@
 
-#include "Queue.cpp"
+#include "interpreter2.0.h"
 
 Register *allReg;
 pair<int,int>* dependence;
-
 int *stuck;
+MIPS *programs;
+
 class DRAM {
     public:
     bool isOn;
@@ -17,7 +18,7 @@ class DRAM {
     bool rowDone = false;
 
     vector<int> priority;
-    int currCore;
+    int currCore = -1;
     
     int memory[1024][256] = {0};
     int rowBuffer[256] = {0};
@@ -182,7 +183,7 @@ class DRAM {
         }
         string task = v.at(0);
         if (task == "add" || task == "addi" || task == "mul" || task == "sub" || task == "slt") {
-            if (addressReg == v.at(1) || changeReg == v.at(1) || (currInst.at(0) == "lw" && (changeReg == v.at(3) || changeReg == v.at(5)))){
+            if (changeReg == v.at(1) || (currInst.at(0) == "lw" && (changeReg == v.at(3) || changeReg == v.at(5)))){
                 return true;
             }
         }
@@ -210,7 +211,7 @@ class DRAM {
 
             if (currInst.at(0) == "lw") {
 
-                if (task == "lw" && (c1 == as || a1 == cs)){
+                if (task == "lw" && ( a1 == cs)){
                     return true;
                 }
 
@@ -221,7 +222,7 @@ class DRAM {
 
             else{
 
-                if (task == "lw" && (c1 == cs || c1 == as || (add == address))){
+                if (task == "lw" && (c1 == cs || (add == address))){
                     return true;
                 }
 
@@ -238,7 +239,7 @@ class DRAM {
         }
         string task = v.at(0);
         if (task == "add" || task == "addi" || task == "mul" || task == "sub" || task == "slt") {
-            if (w.addressReg == v.at(1) || w.changeReg == v.at(1) || (w.inst.at(0) == "lw" && (w.changeReg == v.at(3) || w.changeReg == v.at(5)))){
+            if (w.changeReg == v.at(1) || (w.inst.at(0) == "lw" && (w.changeReg == v.at(3) || w.changeReg == v.at(5)))){
                 return true;
             }
         }
@@ -266,7 +267,7 @@ class DRAM {
 
             if (w.inst.at(0) == "lw") {
 
-                if (task == "lw" && (c1 == as || a1 == cs)){
+                if (task == "lw" && ( a1 == cs)){
                     return true;
                 }
 
@@ -277,7 +278,7 @@ class DRAM {
 
             else{
 
-                if (task == "lw" && (c1 == cs || c1 == as || (add == w.address))){
+                if (task == "lw" && (c1 == cs || (add == w.address))){
                     return true;
                 }
 
@@ -401,19 +402,27 @@ class DRAM {
         }
     }
 
-    void performInst(vector<string> v,int coreNo,unordered_map<string, int> lables){
+    void performInst(vector<string> v,int coreNo, int lineNo){
+
+
         string a= v.at(0);
+        string p = "";
+
         if (a=="add"){
             allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))+allReg[coreNo].getRegValue(v.at(5)));
+            programs[coreNo].incInstCount(0);
         }
         else if (a=="sub"){
             allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))-allReg[coreNo].getRegValue(v.at(5)));
+            programs[coreNo].incInstCount(2);
         }
         else if (a=="mul"){        
             allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))*allReg[coreNo].getRegValue(v.at(5)));
+            programs[coreNo].incInstCount(3);
         }
         else if (a=="addi"){
             allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))+stoi(v.at(5)));               
+            programs[coreNo].incInstCount(1);
         }
         else if (a=="slt"){
             if (allReg[coreNo].getRegValue(v.at(3))<allReg[coreNo].getRegValue(v.at(5))){
@@ -422,34 +431,51 @@ class DRAM {
             else {
                 allReg[coreNo].feedReg(v.at(1),0);
             }        
+            programs[coreNo].incInstCount(6);
         }
         else if (a=="beq"){
 
             if (allReg[coreNo].getRegValue(v.at(1))==allReg[coreNo].getRegValue(v.at(3))){
-                int i=lables[v.at(5)];
+                int i = programs[coreNo].getLabelLine(v.at(5));
                 stuck[coreNo]=i;
+                p = "   Jumping to line " + to_string(programs[coreNo].getLine(i));
             }
+            else {
+                p = "   No jumping";
+            }
+            programs[coreNo].incInstCount(4);
+            
         }
         else if (a=="bne"){
 
             if (allReg[coreNo].getRegValue(v.at(1))!=allReg[coreNo].getRegValue(v.at(3))){
-                int i=lables[v.at(5)];  
+                int i=programs[coreNo].getLabelLine(v.at(5));  
                 stuck[coreNo]=i;
+                p = "   Jumping to line " + to_string(programs[coreNo].getLine(i));
             }
+            else {
+                p = "   No jumping";
+            }
+            programs[coreNo].incInstCount(5);
+            
         }
         else if (a=="j"){   
-            int i = lables[v.at(1)];
+            int i = programs[coreNo].getLabelLine(v.at(1));
             stuck[coreNo]=i;
+            programs[coreNo].incInstCount(9);
+            p = "   Jumping to line " + to_string(programs[coreNo].getLine(i));
         }
+        programs[coreNo].printRegSet2(lineNo, v, p);
     }
 
-    void doIns(int N, vector<string> *arrayIns,unordered_map<string, int> *lables) {
+    void doIns(int N, vector<string> *arrayIns, int *lineNo) {
         if (isOn) {
             relClock += 1;
             clock += 1;
             check();
+            handleBlock(arrayIns);
             for (int i =0; i< N; i++) {
-                if (arrayIns[i].size() != 0 ) {
+                if (arrayIns[i].size() != 0 && stuck[i] != -2) {
                     vector<pair<int,int>> all = allDep(arrayIns[i],i);
                     if (arrayIns[i].at(0) == "lw" || arrayIns[i].at(0) == "sw"){
                         //no dependency
@@ -464,9 +490,10 @@ class DRAM {
                                 initDep();
                                 initWaiter(arrayIns[i],i);
                             }
+                            programs[i].printRegSet2(lineNo[i], arrayIns[i], "    DRAM Request Issued");
                         }
                         //depenedency hence this core is now blocked
-                        else {  
+                        else { 
                             if (stuck[i]!=0){
                                 priority.push_back(i);
                                 stuck[i]=0;
@@ -476,7 +503,7 @@ class DRAM {
                     else {
                         //no dependency
                         if (all.empty()){
-                            performInst(arrayIns[i],i,lables[i]);
+                            performInst(arrayIns[i],i,lineNo[i]);
                         }
                         //dependency so this core  is blocked
                         else {
@@ -487,15 +514,15 @@ class DRAM {
                         }                  
                     }
                 }          
-            handleBlock(arrayIns);
             }
         }
         else {
             bool started = false;
             clock+=1;
             for (int i =0; i< N; i++) {
-                if (arrayIns[i].size() !=0) {
-                    if ((arrayIns[i].at(0) == "lw" || arrayIns[i].at(0) == "sw") && i != currCore) {
+                if (arrayIns[i].size() !=0 && stuck[i] != -2) {
+                    if ((arrayIns[i].at(0) == "lw" || arrayIns[i].at(0) == "sw")) {
+                        programs[i].printRegSet2(lineNo[i], arrayIns[i], "  DRAM Request Issued");
                         if (started == false) {
                             start(arrayIns[i],i);
                             started = true;
@@ -505,7 +532,7 @@ class DRAM {
                         }
                     }
                     else {
-                        performInst(arrayIns[i],i,lables[i]);
+                        performInst(arrayIns[i],i,lineNo[i]);
                     }
                 }
             }
@@ -576,7 +603,6 @@ class DRAM {
     }
 
     void printClock(){
-        cout<< "---------------------------------------Execution complete----------------------------------\n"<<endl;
         cout<< "Number of clock Cycles: " << clock <<"\n" <<endl;
     }
 
@@ -597,9 +623,11 @@ class DRAM {
     }
 
     void printAll() {
+        cout << "\n" << regSteps << endl;
         printClock();
         printUpdates();
         printChangeMem();
+        
     }
 
     // --------------------------------------------------------------------------------------------------------
