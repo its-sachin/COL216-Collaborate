@@ -295,11 +295,33 @@ class DRAM {
         int r = rowSort[row].getr();
         int f = rowSort[row].getf();
         for (int i = f; i != r; i = (i+1)%rowSort[row].N){
-            if (isDep(v, rowSort[row].Q[r+f-i-1],coreNo)){
+
+            if ( isDep(v, rowSort[row].Q[r+f-i-1],coreNo)){
                 return (r+f-1-i);
             }
+
+            if (rowSort[row].Q[i].inst[0] == "lw" && v[0] == "lw") {
+                if (rowSort[row].Q[i].changeReg == v.at(1)) {
+                    rowSort[row].addBubble(i);
+                }
+            }
+
+            else if (rowSort[row].Q[i].inst[0] == "sw" && v[0] == "sw") {
+                int add;
+
+                if (v.size() == 6) {
+                    add = allReg[coreNo].getRegValue(v.at(4));
+                }
+                else if (v.size() == 7) {
+                    add = allReg[coreNo].getRegValue(v.at(5))+stoi(v.at(3));
+                }
+
+                if (rowSort[row].Q[i].address == add) {
+                    rowSort[row].addBubble(i);
+                }
+            }
+
         }
-        return -1;
     }
 
     vector<pair<int,int>> allDep(vector<string> v,int coreNo) {
