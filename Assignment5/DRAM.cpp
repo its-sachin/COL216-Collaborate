@@ -39,17 +39,34 @@ class DRAM {
     int initialClock;
     bool updated = true;
 
+
+
+    int offsetAdd(int a,int coreID){
+        if (a>= 1024*1024/TotalCore){
+            throw "Inavlid Adress is provided";
+        }
+        return a+ coreID*1024*1024/TotalCore;
+    }
+
     void start(vector<string> v, int coreID){
         currCore = coreID;
         currInst = v;
         changeReg  = currInst.at(1);
         if (currInst.size() == 6) {
             addressReg = currInst.at(4);
-            address = allReg[currCore].getRegValue(v.at(4))+ coreID*1024*1024/TotalCore;
+            try {
+                address = offsetAdd(allReg[currCore].getRegValue(v.at(4)),currCore);              
+            } catch (const char* msg) {
+                cerr << msg << endl;
+            }
         }
         else if (currInst.size() == 7) {
             addressReg = currInst.at(5);
-            address = allReg[currCore].getRegValue(v.at(5))+stoi(v.at(3))+ coreID*1024*1024/TotalCore;
+            try {
+                address = offsetAdd(allReg[currCore].getRegValue(v.at(5))+stoi(v.at(3)),currCore);              
+            } catch (const char* msg) {
+                cerr << msg << endl;
+            }
         }
         isOn = true;
         relClock =0;
@@ -175,11 +192,19 @@ class DRAM {
         int add;
         if (v.size() == 6) {
             w.addressReg = v.at(4);
-            add = allReg[coreID].getRegValue(v.at(4))+coreID*1024*1024/TotalCore;
+            try {
+                add = offsetAdd(allReg[coreID].getRegValue(v.at(4)),coreID);              
+            } catch (const char* msg) {
+                cerr << msg << endl;
+            }
         }
         else if (v.size() == 7) {
             w.addressReg = v.at(5);
-            add = allReg[coreID].getRegValue(v.at(5))+stoi(v.at(3))+coreID*1024*1024/TotalCore;
+            try {
+                add = offsetAdd(allReg[coreID].getRegValue(v.at(5))+stoi(v.at(3)),coreID);              
+            } catch (const char* msg) {
+               cerr << msg << endl;
+            }
         }
         w.address = add;
         int row = add/1024;
@@ -223,11 +248,19 @@ class DRAM {
             int add;
             if (v.size() == 6) {
                 a1 = v.at(4);
-                add = allReg[currCore].getRegValue(v.at(4))+ coreNo*1024*1024/TotalCore;
+                try {
+                    add = offsetAdd(allReg[currCore].getRegValue(v.at(4)),currCore);              
+                } catch (const char* msg) {
+                    cerr << msg << endl;
+                }
             }
             else if (v.size() == 7) {
                 a1 = v.at(5);
-                add = allReg[currCore].getRegValue(v.at(5))+stoi(v.at(3))+ coreNo*1024*1024/TotalCore;
+                try {
+                    address = offsetAdd(allReg[currCore].getRegValue(v.at(5))+stoi(v.at(3)),currCore);              
+                } catch (const char* msg) {
+                    cerr << msg << endl;
+                }
             }
 
             if (currInst.at(0) == "lw") {
@@ -279,11 +312,19 @@ class DRAM {
             int add;
             if (v.size() == 6) {
                 a1 = v.at(4);
-                add = allReg[w.coreID].getRegValue(v.at(4))+coreNo*1024*1024/TotalCore;
+                try {
+                    add = offsetAdd(allReg[w.coreID].getRegValue(v.at(4)),w.coreID);              
+                } catch (const char* msg) {
+                    cerr << msg << endl;
+                }
             }
             else if (v.size() == 7) {
                 a1 = v.at(5);
-                add = allReg[w.coreID].getRegValue(v.at(5))+stoi(v.at(3))+ coreNo*1024*1024/TotalCore;
+                try {
+                    add = offsetAdd(allReg[w.coreID].getRegValue(v.at(5))+stoi(v.at(3)),w.coreID);              
+                } catch (const char* msg) {
+                    cerr << msg << endl;
+                }
             }
 
             if (w.inst.at(0) == "lw") {
@@ -332,10 +373,18 @@ class DRAM {
                 int add;
 
                 if (v.size() == 6) {
-                    add = allReg[coreNo].getRegValue(v.at(4))+coreNo*1024*1024/TotalCore;
+                    try {
+                        add = offsetAdd(allReg[coreNo].getRegValue(v.at(4)),coreNo);              
+                    } catch (const char* msg) {
+                        cerr << msg << endl;
+                    }
                 }
                 else if (v.size() == 7) {
-                    add = allReg[coreNo].getRegValue(v.at(5))+stoi(v.at(3))+ coreNo*1024*1024/TotalCore;
+                    try {
+                        add = offsetAdd(allReg[coreNo].getRegValue(v.at(5))+stoi(v.at(3)),coreNo);              
+                    } catch (const char* msg) {
+                    cerr << msg << endl;
+                    }
                 }
 
                 if (rowSort[row].Q[i].address == add) {
