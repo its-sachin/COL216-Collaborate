@@ -8,6 +8,7 @@ MIPS *programs;
 
 class DRAM {
     public:
+    int TotalCore;
     bool isOn;
     vector<string> currInst;
     int clock = 0;
@@ -44,11 +45,11 @@ class DRAM {
         changeReg  = currInst.at(1);
         if (currInst.size() == 6) {
             addressReg = currInst.at(4);
-            address = allReg[currCore].getRegValue(v.at(4));
+            address = allReg[currCore].getRegValue(v.at(4))+ coreID*1024*1024/TotalCore;
         }
         else if (currInst.size() == 7) {
             addressReg = currInst.at(5);
-            address = allReg[currCore].getRegValue(v.at(5))+stoi(v.at(3));
+            address = allReg[currCore].getRegValue(v.at(5))+stoi(v.at(3))+ coreID*1024*1024/TotalCore;
         }
         isOn = true;
         relClock =0;
@@ -174,11 +175,11 @@ class DRAM {
         int add;
         if (v.size() == 6) {
             w.addressReg = v.at(4);
-            add = allReg[coreID].getRegValue(v.at(4));
+            add = allReg[coreID].getRegValue(v.at(4))+coreID*1024*1024/TotalCore;
         }
         else if (v.size() == 7) {
             w.addressReg = v.at(5);
-            add = allReg[coreID].getRegValue(v.at(5))+stoi(v.at(3));
+            add = allReg[coreID].getRegValue(v.at(5))+stoi(v.at(3))+coreID*1024*1024/TotalCore;
         }
         w.address = add;
         int row = add/1024;
@@ -222,11 +223,11 @@ class DRAM {
             int add;
             if (v.size() == 6) {
                 a1 = v.at(4);
-                add = allReg[currCore].getRegValue(v.at(4));
+                add = allReg[currCore].getRegValue(v.at(4))+ coreNo*1024*1024/TotalCore;
             }
             else if (v.size() == 7) {
                 a1 = v.at(5);
-                add = allReg[currCore].getRegValue(v.at(5))+stoi(v.at(3));
+                add = allReg[currCore].getRegValue(v.at(5))+stoi(v.at(3))+ coreNo*1024*1024/TotalCore;
             }
 
             if (currInst.at(0) == "lw") {
@@ -278,11 +279,11 @@ class DRAM {
             int add;
             if (v.size() == 6) {
                 a1 = v.at(4);
-                add = allReg[w.coreID].getRegValue(v.at(4));
+                add = allReg[w.coreID].getRegValue(v.at(4))+coreNo*1024*1024/TotalCore;
             }
             else if (v.size() == 7) {
                 a1 = v.at(5);
-                add = allReg[w.coreID].getRegValue(v.at(5))+stoi(v.at(3));
+                add = allReg[w.coreID].getRegValue(v.at(5))+stoi(v.at(3))+ coreNo*1024*1024/TotalCore;
             }
 
             if (w.inst.at(0) == "lw") {
@@ -331,10 +332,10 @@ class DRAM {
                 int add;
 
                 if (v.size() == 6) {
-                    add = allReg[coreNo].getRegValue(v.at(4));
+                    add = allReg[coreNo].getRegValue(v.at(4))+coreNo*1024*1024/TotalCore;
                 }
                 else if (v.size() == 7) {
-                    add = allReg[coreNo].getRegValue(v.at(5))+stoi(v.at(3));
+                    add = allReg[coreNo].getRegValue(v.at(5))+stoi(v.at(3))+ coreNo*1024*1024/TotalCore;
                 }
 
                 if (rowSort[row].Q[i].address == add) {
@@ -529,6 +530,7 @@ class DRAM {
     }
 
     void doIns(int N, vector<string> *arrayIns, int *lineNo) {
+        TotalCore=N;
 
         if (isOn) {
             relClock += 1;
