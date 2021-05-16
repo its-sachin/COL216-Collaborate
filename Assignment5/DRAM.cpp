@@ -16,6 +16,7 @@ class DRAM {
     int colDelay=0;
     int updates[2] = {0};
     bool rowDone = false;
+    int wasted = 0;
 
     vector<int> priority;
     int currCore = -1;
@@ -289,6 +290,7 @@ class DRAM {
     }
 
     int depInRow(vector<string> v, int row, int coreNo){
+
         if (rowSort[row].isEmpty()){
             return -1;
         }
@@ -326,6 +328,12 @@ class DRAM {
     }
 
     vector<pair<int,int>> allDep(vector<string> v,int coreNo) {
+
+        regSteps = regSteps + "\nClock: " + to_string(clock) +"\n  DRAM: Dependency Check Delay";
+        clock += 1;
+        wasted += 1;
+
+
         vector<pair<int,int>> ans;
         for (int i = 0; i < 1024; i++ ) {
             int curr = depInRow(v, i,coreNo); 
@@ -567,6 +575,7 @@ class DRAM {
         }
     }
     void initTask(vector<string> inst,int coreNo) {
+
         if (rowSort[rowNum].isEmpty()) {
             for (int i =0; i< 1024; i++) {
                 if (depInRow(inst,i,coreNo)!=-1) {
@@ -583,6 +592,7 @@ class DRAM {
         if (!isOn){
             vector<pair<int,int>> all;          
             while(!priority.empty()){
+                cout << "im" << endl;
                 all = allDep(arrayIns[priority[0]],priority[0]);
                 if (all.empty()){
                     stuck[priority[0]]=-1;
@@ -632,6 +642,7 @@ class DRAM {
 
     void printClock(){
         cout<< "Number of clock Cycles: " << clock <<"\n" <<endl;
+        cout << "Clocks delay in DRAM: " <<wasted << "\n" << endl;
     }
 
     void printChangeMem() {
