@@ -11,6 +11,18 @@ private:
     // number of bubbles
     int b =0;
 
+    bool isBubble(int index) {
+        stringstream ss(bubble);
+
+        while (ss.good()) {
+            string substr;
+            getline(ss, substr, ',');
+            if (stoi(substr) == index) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 
 public:
@@ -39,7 +51,7 @@ public:
         if (bubble == "") {
             bubble = to_string(index);
         }
-        else {
+        else if (!isBubble(index)){
             bubble += "," + to_string(index);
         }
     }

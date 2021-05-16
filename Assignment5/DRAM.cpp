@@ -18,7 +18,10 @@ class DRAM {
     bool rowDone = false;
     int wasted = 0;
 
+    int currI = -1;
+
     vector<int> priority;
+    vector<pair<int,int>> dependency;
     int currCore = -1;
     
     int memory[1024][256] = {0};
@@ -53,6 +56,13 @@ class DRAM {
         rowNum = address/1024;
         initialClock = clock;
         rowDone = false;
+        if (v.at(0) == "lw") {
+            programs[coreID].incInstCount(7);
+        }
+
+        else {
+            programs[coreID].incInstCount(8);
+        }
 
     }
 
@@ -152,6 +162,7 @@ class DRAM {
         rowDone = false;
 
         currCore = w.coreID;
+        currI = w.currI;
     }
 
 
@@ -174,8 +185,16 @@ class DRAM {
         w.rowNum = row;
         w.coreID = coreID;
 
-        
+        w.currI = rowSort[w.rowNum].getr();
         rowSort[w.rowNum].add(w);
+
+        if (v.at(0) == "lw") {
+            programs[coreID].incInstCount(7);
+        }
+
+        else {
+            programs[coreID].incInstCount(8);
+        }
     }
 
     bool currIsDep(vector<string> v,int coreNo) {
@@ -329,7 +348,12 @@ class DRAM {
 
     vector<pair<int,int>> allDep(vector<string> v,int coreNo) {
 
-        regSteps = regSteps + "\nClock: " + to_string(clock) +"\n  DRAM: Dependency Check Delay";
+        string a = "";
+        for (auto& i: v) {
+            a += " " + i;
+        }
+
+        regSteps = regSteps + "\nClock: " + to_string(clock) +"\n  DRAM: Dependency Check Delay for core: " + to_string(coreNo+1) + "\n   For Instruction: " + a + "\n";
         clock += 1;
         wasted += 1;
 
@@ -505,11 +529,15 @@ class DRAM {
     }
 
     void doIns(int N, vector<string> *arrayIns, int *lineNo) {
+
         if (isOn) {
             relClock += 1;
             clock += 1;
             check();
             handleBlock(arrayIns);
+        }
+        if (isOn) {
+            
             for (int i =0; i< N; i++) {
                 if (arrayIns[i].size() != 0 && stuck[i] != -2) {
                     vector<pair<int,int>> all = allDep(arrayIns[i],i);
@@ -531,6 +559,9 @@ class DRAM {
                         //depenedency hence this core is now blocked
                         else { 
                             if (stuck[i]!=0){
+                                if (priority.size() == 0){
+                                    dependency = all;
+                                }
                                 priority.push_back(i);
                                 stuck[i]=0;
                             }
@@ -544,6 +575,9 @@ class DRAM {
                         //dependency so this core  is blocked
                         else {
                             if (stuck[i]!=0){
+                                if (priority.size() == 0){
+                                    dependency = all;
+                                }
                                 priority.push_back(i);
                                 stuck[i]=0;
                             }
@@ -588,21 +622,49 @@ class DRAM {
             start(rowSort[rowNum].pop());
         }
     }
+
+    int getDepCurr() {
+
+        for (auto& it : dependency ){
+            if (it.first == rowNum) {
+                return it.second;
+            }
+        }
+        return -1;
+
+    }
     void handleBlock(vector<string> *arrayIns){
-        if (!isOn){
-            vector<pair<int,int>> all;          
-            while(!priority.empty()){
-                cout << "im" << endl;
-                all = allDep(arrayIns[priority[0]],priority[0]);
-                if (all.empty()){
-                    stuck[priority[0]]=-1;
-                    priority.erase(priority.begin());
+        if (!isOn && !priority.empty()){
+
+            int currRowDep = getDepCurr();
+
+            if (currRowDep != -1 && currI != -1){
+
+                // current row complete
+                int i = 0;
+                if (currI == currRowDep){
+                    for (auto& it : dependency ){
+                        if (it.first == rowNum) {
+                            dependency.erase(dependency.begin() + i);
+                            break;
+                        }
+                        i += 1;
+                    }
+
+                    if (dependency.empty() ) {
+                        stuck[priority[0]]=-1;
+                        priority.erase(priority.begin());
+                    }
+
                 }
+
             }
             if (priority.empty()){
                 return;
             }
+
             initTask(arrayIns[priority[0]],priority[0]);
+            
         }
     }
 
