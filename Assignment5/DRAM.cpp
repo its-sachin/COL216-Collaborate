@@ -296,7 +296,7 @@ class DRAM {
         int f = rowSort[row].getf();
         for (int i = f; i != r; i = (i+1)%rowSort[row].N){
 
-            if ( isDep(v, rowSort[row].Q[r+f-i-1],coreNo)){
+            if (out == -1 && isDep(v, rowSort[row].Q[r+f-i-1],coreNo)){
                 return (r+f-1-i);
             }
 
@@ -322,6 +322,7 @@ class DRAM {
             }
 
         }
+        return -1;
     }
 
     vector<pair<int,int>> allDep(vector<string> v,int coreNo) {
