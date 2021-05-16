@@ -404,6 +404,11 @@ class DRAM {
 
     void performInst(vector<string> v,int coreNo, int lineNo){
 
+        if ((allReg[coreNo].flag != -1)&& allReg[coreNo].flag == clock){
+            clock += 1;
+            allReg[coreNo].flag = -1;
+        }
+
 
         string a= v.at(0);
         string p = "";
