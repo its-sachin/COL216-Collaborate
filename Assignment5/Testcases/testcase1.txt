@@ -1,4 +1,4 @@
-main:
+main :
 	addi $s0, $zero, 1000
 	addi $s1, $zero, 0
 	addi $s2, $zero, 10
