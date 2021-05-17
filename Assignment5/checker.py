@@ -20,7 +20,7 @@ print ("\n------------------------------------------------------------------")
 print("\nExecuting assignment 4")
 
 for i in range(n):
-    subprocess.run("./b.out " + testfiles[i] + " " + str(rowdel) + " " + str(coldel) + " " + str(i+1),shell=True)
+    subprocess.run("./b.out " + testfiles[i] + " " + str(rowdel) + " " + str(coldel) + " " + str(i) + " " + str(n),shell=True)
 
 old = [[]]
 new = [[]]

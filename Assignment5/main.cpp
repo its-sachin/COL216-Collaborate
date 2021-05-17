@@ -85,7 +85,9 @@ bool executeInst(int N,int M){
                     if (!ram.rowSort[i].isEmpty()) {
                         curr = ram.rowSort[i].size();
                         total += curr;
-                        temp += to_string(i) + ":" + to_string(curr) + " ";
+                        if (curr!=0) {
+                            temp += to_string(i) + ":" + to_string(curr) + " ";
+                        }
                     }
                 }
                 p = p + "\n  [Instructions in queue: " + to_string(curr) + " (" + temp + ")]";

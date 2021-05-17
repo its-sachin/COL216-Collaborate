@@ -21,7 +21,7 @@ class DRAM {
     int wasted = 0;
     int numIns = 0;
 
-    int currI = -1;
+    int currI = -2;
 
     vector<int> priority;
     vector<pair<int,int>> dependency;
@@ -422,7 +422,7 @@ class DRAM {
                 a += " " + i;
             }
 
-            regSteps = regSteps + "\nClock: " + to_string(clock) + "-" + to_string(clock+1) + +"\n  DRAM: Dependency Check Delay for core: " + to_string(coreNo+1) + "\n   For Instruction: " + a + "\n";
+            regSteps = regSteps + "\nClock: " + to_string(clock) + +"\n  DRAM: Dependency Check Delay for core: " + to_string(coreNo+1) + "\n   For Instruction: " + a + "\n";
             clock += 1;
             wasted += 1;
             
@@ -437,7 +437,7 @@ class DRAM {
             }
         }
         if (currIsDep(v,coreNo) && isOn){
-            ans.push_back(make_pair(rowNum,-1));
+            ans.push_back(make_pair(rowNum,-2));
         }
         return ans;
     }
@@ -656,7 +656,7 @@ class DRAM {
                         }
                         //depenedency hence this core is now blocked
                         else { 
-
+                            regSteps += "\n[Found Dependence]\n";
                             if (stuck[i]!=0){
                                 if (priority.size() == 0){
                                     dependency = all;
@@ -674,6 +674,7 @@ class DRAM {
                         }
                         //dependency so this core  is blocked
                         else {
+                            regSteps += "\n[Found Dependence]\n";
                             if (stuck[i]!=0){
                                 if (priority.size() == 0){
                                     dependency = all;
@@ -708,9 +709,35 @@ class DRAM {
             }
         }
     }
+
+    int getRow(vector<string> inst, int coreNum) {
+
+        int add;
+        if (inst.size() == 6) {
+            try {
+                add = offsetAdd(allReg[coreNum].getRegValue(inst.at(4)),coreNum);              
+            } catch (const char* msg) {
+                cerr << msg << endl;
+            }
+        }
+        else if (inst.size() == 7) {
+            try {
+                add = offsetAdd(allReg[coreNum].getRegValue(inst.at(5))+stoi(inst.at(3)),coreNum);              
+            } catch (const char* msg) {
+                cerr << msg << endl;
+            }
+        }
+
+        return add/1024;
+
+
+    }
     void initTask(vector<string> inst,int coreNo) {
 
         if (rowSort[rowNum].isEmpty()) {
+            // if (rowNum == getRow(inst,coreNo)) {
+            //     start(inst,coreNo);
+            // }
             for (int i =0; i< 1024; i++) {
                 if (depInRow(inst,i,coreNo)!=-1) {
                     start(rowSort[i].pop());
@@ -726,6 +753,7 @@ class DRAM {
     int getDepCurr() {
 
         for (auto& it : dependency ){
+            cout << clock << " " << it.first << " " << rowNum << endl;
             if (it.first == rowNum) {
                 return it.second;
             }
@@ -737,9 +765,9 @@ class DRAM {
         if (!isOn && !priority.empty()){
 
             int currRowDep = getDepCurr();
+            cout << "st " << clock << " " << currRowDep << endl;
 
             if (currRowDep != -1 && currI != -1){
-
                 // current row complete
                 int i = 0;
                 if (currI == currRowDep){

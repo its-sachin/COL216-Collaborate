@@ -8,8 +8,6 @@ private:
     int f = 0;
     int r= 0;
     string bubble = "";
-    // number of bubbles
-    int b =0;
 
 
 public:
@@ -18,7 +16,19 @@ public:
     
 
     int size(){
-        return(N-f+r)%N;
+
+        stringstream ss(bubble);
+        string newBubble = "";
+
+        int i = 0;
+        while (ss.good()) {
+            string substr;
+            getline(ss, substr, ',');
+
+            i +=1;    
+        } 
+
+        return(N-f+r-i)%N;
     }
 
     bool isEmpty(){
