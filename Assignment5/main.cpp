@@ -151,14 +151,17 @@ int main(int argc, char const *argv[])
         cout << "Enter number of files\n" << endl;
         return -1;
     }
-    cout << "n" << endl;
     int N = stoi(argv[1]);
+
+    if (N % 2 !=0 && N!=1){
+        cout << "No of cores must be a multiple of 2\n";
+        return -1;
+    }
 
     if (argc == 2) {
         cout << "Enter number of cycles\n" << endl;
         return -1;
     }
-    cout << "m" << endl;
     M = stoi(argv[2]);
 
     if (argc < 2+N) {
@@ -176,7 +179,6 @@ int main(int argc, char const *argv[])
         cout << "Enter delays \n" << endl;
         return 0;
     }
-    cout << "del" << endl;
     int rowdel =  stoi(argv[3+N]);
     int coldel = stoi(argv[4+N]);
 
