@@ -664,7 +664,7 @@ class DRAM {
                                 priority.push_back(i);
                                 stuck[i]=0;
                             }
-                            cout << stuck[i] << endl;
+                            // cout << stuck[i] << endl;
                         }        
                     }
                     else {
