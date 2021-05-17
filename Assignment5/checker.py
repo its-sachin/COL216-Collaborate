@@ -1,57 +1,60 @@
 import subprocess
+import sys
 
-test = input("Enter test file: ")
-delays = input("Enter delays: ")
+n = int(sys.argv[1])
+m = int(sys.argv[2])
+testfiles = []
+testStr = ""
+for i in range(n):
+    testfiles.append(sys.argv[3+i])
+    testStr += sys.argv[3+i] + " "
+rowdel = int(sys.argv[3+n])
+coldel = int(sys.argv[4+n])
 
-print("\nExecuting by reordering")
-subprocess.run("./a.exe " + test + " " + delays + " " + "0")
+
+print("\nExecuting assignment 5")
+subprocess.run("./a.exe " + str(n) + " " + str(m) + " " + testStr + str(rowdel) + " " + str(coldel) + " 0")
+
 print ("\n------------------------------------------------------------------")
-subprocess.run("./a.exe " + test + " " + delays + " " + "1")
 
-oldName = "./old.txt"
-newName = "./new.txt"
+print("\nExecuting assignment 4")
 
-oldFile = open(oldName).readlines() 
- 
-oldFile_line = [] 
- 
-clockNew = 0
-clockOld = 0
+for i in range(n):
+    subprocess.run("./b.exe " + testfiles[i] + " " + str(rowdel) + " " + str(coldel) + " " + str(i+1))
 
-i = 0
-for lines in oldFile: 
-    if (i == 0):
-        clockOld = int(lines[6:])
-        i = 1
-    else:
-	    oldFile_line.append(lines) 
- 
-newFile = open(newName).readlines() 
- 
-newFile_line = [] 
+old = [[]]
+new = [[]]
+for i in range(n):
+    oldname = "regbefore" + str(i+1) + ".txt"
+    newname = "regafter" + str(i+1) + ".txt"
 
-i = 0 
-for lines in newFile: 
-    if (i == 0):
-        clockNew = int(lines[6:])
-        i = 1
-    else:
-	    newFile_line.append(lines) 
+    oldFile = open(oldname).readlines() 
+    newFile = open(newname).readlines() 
 
-print ("\n")
+    oldFile_line = []
+    newFile_line = []
 
-if (len(oldFile_line) != len(newFile_line)):
-    print("Output not same!!")
+    for lines in oldFile: 
+        oldFile_line.append(lines) 
 
-else:
-    done = True
+    for lines in newFile: 
+        newFile_line.append(lines) 
+
+    old.append(oldFile_line)
+    new.append(newFile_line)
+
+done = True
+
+for i in range(n):
+    oldFile_line = old[i]
+    newFile_line = new[i]
+
     for i in range(len(oldFile_line)):
         if (oldFile_line[i] != newFile_line[i]):
             done = False
+            print("Output dont match at core ",i+1 )
             print("Without reordering: ", oldFile_line)
             print("Witg reordering: ", newFile_line)
 
-    if (done):
-        print("Output Matches!!")
-
-    print("Gain in clocks: ", clockOld-clockNew)
+if (done):
+    print("\n\nOutput Matches!!")

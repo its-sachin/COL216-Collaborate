@@ -265,5 +265,15 @@ int main(int argc, char const *argv[])
     }
     ram.printAll();
 
+    if (argc > 5+N) {
+
+        for (int i=0; i < N; i++) {
+            ofstream myfile; 
+
+            myfile.open("regafter" + to_string(i+1) + ".txt");
+            myfile<< allReg[i].getRegVal() << endl;   
+        }
+    }
+
     return 0;
 }

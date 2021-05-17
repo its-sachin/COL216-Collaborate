@@ -42,4 +42,14 @@ public:
         } 
     }
 
+    string getRegVal() {
+        string o = "";
+        for (map<string, int>::iterator itr = regs.begin(); itr != regs.end(); ++itr) { 
+             if (itr->second != 0){
+                o += itr->first  + " = " + to_string(itr->second) + " | "; 
+             }
+        }
+        return o;
+    }
+
 };
