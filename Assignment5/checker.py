@@ -13,14 +13,14 @@ coldel = int(sys.argv[4+n])
 
 
 print("\nExecuting assignment 5")
-subprocess.run("./a.exe " + str(n) + " " + str(m) + " " + testStr + str(rowdel) + " " + str(coldel) + " 0")
+subprocess.run("./a.out " + str(n) + " " + str(m) + " " + testStr + str(rowdel) + " " + str(coldel) + " 0",shell=True)
 
 print ("\n------------------------------------------------------------------")
 
 print("\nExecuting assignment 4")
 
 for i in range(n):
-    subprocess.run("./b.exe " + testfiles[i] + " " + str(rowdel) + " " + str(coldel) + " " + str(i+1))
+    subprocess.run("./b.out " + testfiles[i] + " " + str(rowdel) + " " + str(coldel) + " " + str(i+1),shell=True)
 
 old = [[]]
 new = [[]]

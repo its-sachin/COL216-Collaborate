@@ -1,0 +1,8 @@
+main :
+	addi $s0, $zero, 1000
+	addi $s1, $zero, 1024
+	lw $t2, 0($s0)
+	lw $t3, 0($s1)
+	add $t2,$t2,$t3 #stuck here 
+
+exit:
