@@ -6,9 +6,6 @@
 #include <algorithm>
 using namespace std;
 
-int N;
-int i;
-
 
 // -----------------------------------ass4-addition-------------------------------------------------------
 
@@ -52,31 +49,16 @@ class DRAM {
     int initialClock;
     bool updated = true;
 
-    int offsetAdd(int a){
-        if (a>= 1024*1024/N){
-            throw "Inavlid Adress is provided";
-        }
-        return a+ i*1024*1024/N;
-    }
-
     void start(vector<string> v){
         currInst = v;
         changeReg  = currInst.at(1);
         if (currInst.size() == 6) {
             addressReg = currInst.at(4);
-            try {
-                address = offsetAdd( regs.at(v.at(4)));              
-            } catch (const char* msg) {
-                cerr << msg << endl;
-            }
+            address = regs.at(v.at(4));
         }
         else if (currInst.size() == 7) {
             addressReg = currInst.at(5);
-            try {
-                address = offsetAdd( regs.at(v.at(5))+stoi(v.at(3)));              
-            } catch (const char* msg) {
-                cerr << msg << endl;
-            }
+            address = regs.at(v.at(5))+stoi(v.at(3));
         }
         isOn = true;
         relClock =0;
@@ -196,20 +178,11 @@ class DRAM {
         int add;
         if (v.size() == 6) {
             w.addressReg = v.at(4);
-
-            try {
-                add = offsetAdd(regs.at(v.at(4)));              
-            } catch (const char* msg) {
-                cerr << msg << endl;
-            }
+            add = regs.at(v.at(4));
         }
         else if (v.size() == 7) {
             w.addressReg = v.at(5);
-            try {
-                add = offsetAdd(regs.at(v.at(5))+stoi(v.at(3)));              
-            } catch (const char* msg) {
-                cerr << msg << endl;
-            }
+            add = regs.at(v.at(5))+stoi(v.at(3));
         }
         w.address = add;
         int row = add/1024;
@@ -266,19 +239,11 @@ class DRAM {
             int add;
             if (v.size() == 6) {
                 a1 = v.at(4);
-                try {
-                    add = offsetAdd(regs.at(v.at(4)));              
-                } catch (const char* msg) {
-                    cerr << msg << endl;
-                }
+                add = regs.at(v.at(4));
             }
             else if (v.size() == 7) {
                 a1 = v.at(5);
-                try {
-                    add = offsetAdd(regs.at(v.at(5))+stoi(v.at(3)));              
-                } catch (const char* msg) {
-                    cerr << msg << endl;
-                }
+                add = regs.at(v.at(5))+stoi(v.at(3));
             }
 
             if (currInst.at(0) == "lw") {
@@ -327,19 +292,11 @@ class DRAM {
             int add;
             if (v.size() == 6) {
                 a1 = v.at(4);
-                try {
-                    add = offsetAdd(regs.at(v.at(4)));              
-                } catch (const char* msg) {
-                    cerr << msg << endl;
-                }
+                add = regs.at(v.at(4));
             }
             else if (v.size() == 7) {
                 a1 = v.at(5);
-                try {
-                    add = offsetAdd(regs.at(v.at(5))+stoi(v.at(3)));              
-                } catch (const char* msg) {
-                    cerr << msg << endl;
-                }
+                add = regs.at(v.at(5))+stoi(v.at(3));
             }
 
             if (w.inst.at(0) == "lw") {
@@ -1254,12 +1211,11 @@ int main(int argc, char const *argv[])
     program.printInstCount();
 
     if (argc > 4) {
-        i = stoi(argv[4]);
-        N = stoi(argv[5]);
+        int i = stoi(argv[4]);
 
         ofstream myfile; 
 
-        myfile.open("regbefore" + to_string(i+1) + ".txt");
+        myfile.open("regbefore" + to_string(i) + ".txt");
         myfile<< program.getRegVal() << endl;   
     }
 
