@@ -11,19 +11,6 @@ private:
     // number of bubbles
     int b =0;
 
-    bool isBubble(int index) {
-        stringstream ss(bubble);
-
-        while (ss.good()) {
-            string substr;
-            getline(ss, substr, ',');
-            if (stoi(substr) == index) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 
 public:
     int N = 32;
@@ -95,6 +82,24 @@ public:
     void add(Waiter o){
         Q[r] = o;
         r = (r +1)%N;
+    }
+
+    bool isBubble(int index) {
+
+        if (bubble == ""){
+            return false;
+        }
+        stringstream ss(bubble);
+
+        while (ss.good()) {
+            string substr;
+            getline(ss, substr, ',');
+            // cout << substr << endl;
+            if (stoi(substr) == index) {
+                return true;
+            }
+        }
+        return false;
     }
 
     int getf(){return f;}

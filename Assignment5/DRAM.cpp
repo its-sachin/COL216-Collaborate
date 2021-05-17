@@ -5,6 +5,7 @@ Register *allReg;
 pair<int,int>* dependence;
 int *stuck;
 MIPS *programs;
+int M;
 
 class DRAM {
     public:
@@ -18,6 +19,7 @@ class DRAM {
     int updates[2] = {0};
     bool rowDone = false;
     int wasted = 0;
+    int numIns = 0;
 
     int currI = -1;
 
@@ -86,6 +88,9 @@ class DRAM {
 
     void check() {
         if ( rowDone == false && relClock == rowDelay){
+            if (initialClock + rowDelay >= M) {
+                return;
+            }
             if (rowNum != currRow){
                 regSteps += "\n";
                 for (int i=0; i <256; i++){
@@ -103,6 +108,9 @@ class DRAM {
                 else {
                     updated = false;
                 }
+                if (initialClock + rowDelay >= M) {
+                    return;
+                }
                 isFirst = false;
                 regSteps = regSteps + "\nClock: " + to_string(initialClock+1) + "-"+ to_string(initialClock+rowDelay) +"\n  DRAM: Activate Row: " + to_string(rowNum);
                 initialClock += rowDelay;
@@ -118,12 +126,16 @@ class DRAM {
             rowDone = true;
         }
         else if ((rowNum == currRow) && relClock == colDelay) {
+            if (initialClock + colDelay >= M) {
+                return;
+            }
             if (currInst.at(0) == "lw") {
                 regSteps = regSteps + "\nClock: " + to_string(initialClock+1) + "-"+ to_string(initialClock +colDelay) +"\n  DRAM: Column Access: " + to_string(colNum);
                 allReg[currCore].feedReg(changeReg,rowBuffer[colNum]);
                 regSteps = regSteps+ "\n  Register modified : " + changeReg + " = " + to_string(allReg[currCore].getRegValue(changeReg));
                 clock = initialClock + colDelay;
                 allReg[currCore].flag = clock;
+                numIns += 1;
             }
             else if (currInst.at(0) == "sw"){
                 regSteps = regSteps + "\nClock: " + to_string(initialClock+1) + "-"+ to_string(initialClock+colDelay) +"\n  DRAM: Column Access: " + to_string(colNum);
@@ -131,6 +143,7 @@ class DRAM {
                 regSteps = regSteps+ "\n  Memory address modified : " + to_string(address) + " = " + to_string(allReg[currCore].getRegValue(changeReg));
                 clock = initialClock + colDelay;
                 updates[1] += 1;
+                numIns += 1;
             }
             isOn = false;
         }
@@ -359,36 +372,41 @@ class DRAM {
         int f = rowSort[row].getf();
         for (int i = f; i != r; i = (i+1)%rowSort[row].N){
 
-            if (isDep(v, rowSort[row].Q[r+f-i-1],coreNo)){
-                return (r+f-1-i);
-            }
+            if (!rowSort[row].isBubble(r+f-i-1)) {
 
-            if (rowSort[row].Q[i].inst[0] == "lw" && v[0] == "lw") {
-                if (rowSort[row].Q[i].changeReg == v.at(1)) {
-                    rowSort[row].addBubble(i);
+                if (isDep(v, rowSort[row].Q[r+f-i-1],coreNo)){
+                    return (r+f-1-i);
                 }
             }
 
-            else if (rowSort[row].Q[i].inst[0] == "sw" && v[0] == "sw") {
-                int add;
+            if (!rowSort[row].isBubble(i)) {
+                if (rowSort[row].Q[i].inst[0] == "lw" && v[0] == "lw") {
+                    if (rowSort[row].Q[i].changeReg == v.at(1)) {
+                        rowSort[row].addBubble(i);
+                    }
+                }
 
-                if (v.size() == 6) {
-                    try {
-                        add = offsetAdd(allReg[coreNo].getRegValue(v.at(4)),coreNo);              
-                    } catch (const char* msg) {
+                else if (rowSort[row].Q[i].inst[0] == "sw" && v[0] == "sw") {
+                    int add;
+
+                    if (v.size() == 6) {
+                        try {
+                            add = offsetAdd(allReg[coreNo].getRegValue(v.at(4)),coreNo);              
+                        } catch (const char* msg) {
+                            cerr << msg << endl;
+                        }
+                    }
+                    else if (v.size() == 7) {
+                        try {
+                            add = offsetAdd(allReg[coreNo].getRegValue(v.at(5))+stoi(v.at(3)),coreNo);              
+                        } catch (const char* msg) {
                         cerr << msg << endl;
+                        }
                     }
-                }
-                else if (v.size() == 7) {
-                    try {
-                        add = offsetAdd(allReg[coreNo].getRegValue(v.at(5))+stoi(v.at(3)),coreNo);              
-                    } catch (const char* msg) {
-                    cerr << msg << endl;
-                    }
-                }
 
-                if (rowSort[row].Q[i].address == add) {
-                    rowSort[row].addBubble(i);
+                    if (rowSort[row].Q[i].address == add) {
+                        rowSort[row].addBubble(i);
+                    }
                 }
             }
 
@@ -398,14 +416,17 @@ class DRAM {
 
     vector<pair<int,int>> allDep(vector<string> v,int coreNo) {
 
-        string a = "";
-        for (auto& i: v) {
-            a += " " + i;
-        }
+        if (!isEmpty()) {
+            string a = "";
+            for (auto& i: v) {
+                a += " " + i;
+            }
 
-        regSteps = regSteps + "\nClock: " + to_string(clock) +"\n  DRAM: Dependency Check Delay for core: " + to_string(coreNo+1) + "\n   For Instruction: " + a + "\n";
-        clock += 1;
-        wasted += 1;
+            regSteps = regSteps + "\nClock: " + to_string(clock) + "-" + to_string(clock+1) + +"\n  DRAM: Dependency Check Delay for core: " + to_string(coreNo+1) + "\n   For Instruction: " + a + "\n";
+            clock += 1;
+            wasted += 1;
+            
+        }
 
 
         vector<pair<int,int>> ans;
@@ -511,6 +532,10 @@ class DRAM {
 
         if ((allReg[coreNo].flag != -1)&& allReg[coreNo].flag == clock){
             clock += 1;
+            if (isOn) {
+                relClock += 1;
+                check();
+            }
             allReg[coreNo].flag = -1;
         }
 
@@ -521,18 +546,22 @@ class DRAM {
         if (a=="add"){
             allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))+allReg[coreNo].getRegValue(v.at(5)));
             programs[coreNo].incInstCount(0);
+            numIns += 1;
         }
         else if (a=="sub"){
             allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))-allReg[coreNo].getRegValue(v.at(5)));
             programs[coreNo].incInstCount(2);
+            numIns += 1;
         }
         else if (a=="mul"){        
             allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))*allReg[coreNo].getRegValue(v.at(5)));
             programs[coreNo].incInstCount(3);
+            numIns += 1;
         }
         else if (a=="addi"){
             allReg[coreNo].feedReg(v.at(1),allReg[coreNo].getRegValue(v.at(3))+stoi(v.at(5)));               
             programs[coreNo].incInstCount(1);
+            numIns += 1;
         }
         else if (a=="slt"){
             if (allReg[coreNo].getRegValue(v.at(3))<allReg[coreNo].getRegValue(v.at(5))){
@@ -542,6 +571,7 @@ class DRAM {
                 allReg[coreNo].feedReg(v.at(1),0);
             }        
             programs[coreNo].incInstCount(6);
+            numIns += 1;
         }
         else if (a=="beq"){
 
@@ -554,6 +584,7 @@ class DRAM {
                 p = "   No jumping";
             }
             programs[coreNo].incInstCount(4);
+            numIns += 1;
             
         }
         else if (a=="bne"){
@@ -567,6 +598,7 @@ class DRAM {
                 p = "   No jumping";
             }
             programs[coreNo].incInstCount(5);
+            numIns += 1;
             
         }
         else if (a=="j"){   
@@ -574,6 +606,7 @@ class DRAM {
             stuck[coreNo]=i;
             programs[coreNo].incInstCount(9);
             p = "   Jumping to line " + to_string(programs[coreNo].getLine(i));
+            numIns += 1;
         }
         programs[coreNo].printRegSet2(lineNo, v, p);
     }
@@ -585,13 +618,27 @@ class DRAM {
             relClock += 1;
             clock += 1;
             check();
-            handleBlock(arrayIns);
         }
+
+        if (clock >= M) {
+            return;
+        }
+        handleBlock(arrayIns);
         if (isOn) {
             
             for (int i =0; i< N; i++) {
-                if (arrayIns[i].size() != 0 && stuck[i] != -2) {
+                if (arrayIns[i].size() != 0 && stuck[i] != -2 && stuck[i] != 0) {
                     vector<pair<int,int>> all = allDep(arrayIns[i],i);
+
+                    if (isOn) {
+                        relClock +=1;
+                        check();
+                        handleBlock(arrayIns);
+                    }
+
+                    if (clock >= M) {
+                        return;
+                    }
                     if (arrayIns[i].at(0) == "lw" || arrayIns[i].at(0) == "sw"){
                         //no dependency
                         if (all.empty()) {
@@ -609,6 +656,7 @@ class DRAM {
                         }
                         //depenedency hence this core is now blocked
                         else { 
+
                             if (stuck[i]!=0){
                                 if (priority.size() == 0){
                                     dependency = all;
@@ -616,6 +664,7 @@ class DRAM {
                                 priority.push_back(i);
                                 stuck[i]=0;
                             }
+                            cout << stuck[i] << endl;
                         }        
                     }
                     else {
@@ -705,6 +754,11 @@ class DRAM {
                     if (dependency.empty() ) {
                         stuck[priority[0]]=-1;
                         priority.erase(priority.begin());
+
+                        if (!priority.empty()) {
+
+                            dependency = allDep(arrayIns[priority[0]],priority[0]);
+                        }
                     }
 
                 }
@@ -743,19 +797,23 @@ class DRAM {
         string out = "";
         for (int row = 0; row< 1024; row++ ){
             for (int i=rowSort[row].getf(); i <rowSort[row].getr(); i = (i+1)%rowSort[row].N) {
-                string a = "";
-                for (auto& i: rowSort[row].Q[i].inst) {
-                    a += " " + i;
+                if (!rowSort[row].isBubble(i)) {
+                    string a = "";
+                    for (auto& it: rowSort[row].Q[i].inst) {
+                        a += " " + it;
+                    }
+                    out += "    " + a + "\n";
                 }
-                out += "    " + a + "\n";
             }
         }
         return out;
     }
 
     void printClock(){
-        cout<< "Number of clock Cycles: " << clock <<"\n" <<endl;
-        cout << "Clocks delay in DRAM: " <<wasted << "\n" << endl;
+        cout<< "Number of clock Cycles: " << clock <<endl;
+        cout << "Clocks delay in DRAM: " <<wasted << endl;
+        cout << "Number of Instructions performed: " << numIns << endl;
+        cout << "Throughput: "<< (float)numIns/clock << "\n" << endl;
     }
 
     void printChangeMem() {

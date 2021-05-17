@@ -151,15 +151,15 @@ int main(int argc, char const *argv[])
         cout << "Enter number of files\n" << endl;
         return -1;
     }
-
+    cout << "n" << endl;
     int N = stoi(argv[1]);
 
     if (argc == 2) {
         cout << "Enter number of cycles\n" << endl;
         return -1;
     }
-
-    int M = stoi(argv[2]);
+    cout << "m" << endl;
+    M = stoi(argv[2]);
 
     if (argc < 2+N) {
         cout << "Enter all files path\n" << endl;
@@ -176,6 +176,7 @@ int main(int argc, char const *argv[])
         cout << "Enter delays \n" << endl;
         return 0;
     }
+    cout << "del" << endl;
     int rowdel =  stoi(argv[3+N]);
     int coldel = stoi(argv[4+N]);
 
@@ -194,7 +195,6 @@ int main(int argc, char const *argv[])
         stuck[i] = -1;
     }
     programs = new MIPS[N];
-
 
     
     for (int i =0; i< N; i++) {
