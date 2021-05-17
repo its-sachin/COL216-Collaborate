@@ -4,6 +4,10 @@ main :
 	addi $t0, $zero, 1
 	addi $t1, $zero, 2
 	lw $t0, 0($s0)
+	lw $t0, 0($s0)
+	lw $t0, 0($s0)
+	lw $t0, 0($s0)
+	lw $t0, 0($s0)
 	sw $t1, 0($s1)
 	lw $t0, 0($t0)#both redundency and dependecy here 
 	lw $t3, 0($s1)

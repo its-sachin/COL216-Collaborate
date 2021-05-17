@@ -753,7 +753,6 @@ class DRAM {
     int getDepCurr() {
 
         for (auto& it : dependency ){
-            cout << clock << " " << it.first << " " << rowNum << endl;
             if (it.first == rowNum) {
                 return it.second;
             }
@@ -765,7 +764,6 @@ class DRAM {
         if (!isOn && !priority.empty()){
 
             int currRowDep = getDepCurr();
-            cout << "st " << clock << " " << currRowDep << endl;
 
             if (currRowDep != -1 && currI != -1){
                 // current row complete

@@ -4,6 +4,10 @@ main :
 	addi $t0, $zero, 1
 	addi $t1, $zero, 2
 	sw $t0, 0($s0)
+	sw $t0, 0($s0)
+	sw $t0, 0($s0)
+	sw $t0, 0($s0)
+	sw $t0, 0($s0)
 	lw $t2, 0($s1)
 	sw $t1, 0($t2)
 	lw $t3, 0($s1)
