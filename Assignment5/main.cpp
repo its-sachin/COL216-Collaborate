@@ -107,6 +107,7 @@ bool executeInst(int N,int M){
             }
             else {
                 for (int i=0;i<N;i++){
+                     cout << ram.clock << " " << i << " " << stuck[i] << endl;
                     if (stuck[i]==-1){
                         // this core is done
                         if (arr[i]+1>programs[i].getInstruction().size()){

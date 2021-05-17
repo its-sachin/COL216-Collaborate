@@ -416,18 +416,6 @@ class DRAM {
 
     vector<pair<int,int>> allDep(vector<string> v,int coreNo) {
 
-        if (!isEmpty()) {
-            string a = "";
-            for (auto& i: v) {
-                a += " " + i;
-            }
-
-            regSteps = regSteps + "\nClock: " + to_string(clock) + +"\n  DRAM: Dependency Check Delay for core: " + to_string(coreNo+1) + "\n   For Instruction: " + a + "\n";
-            clock += 1;
-            wasted += 1;
-            
-        }
-
 
         vector<pair<int,int>> ans;
         for (int i = 0; i < 1024; i++ ) {
@@ -627,13 +615,26 @@ class DRAM {
         if (isOn) {
             
             for (int i =0; i< N; i++) {
+
                 if (arrayIns[i].size() != 0 && stuck[i] != -2 && stuck[i] != 0) {
                     vector<pair<int,int>> all = allDep(arrayIns[i],i);
 
-                    if (isOn) {
-                        relClock +=1;
-                        check();
-                        handleBlock(arrayIns);
+                    if (!isEmpty()) {
+                        string a = "";
+                        for (auto& it: arrayIns[i]) {
+                            a += " " + it;
+                        }
+
+                        regSteps = regSteps + "\nClock: " + to_string(clock) + +"\n  DRAM: Dependency Check Delay for core: " + to_string(i+1) + "\n   For Instruction: " + a + "\n";
+                        clock += 1;
+                        wasted += 1;
+
+                        if (isOn) {
+                            relClock +=1;
+                            check();
+                            handleBlock(arrayIns);
+                        }
+                        
                     }
 
                     if (clock >= M) {
@@ -658,9 +659,6 @@ class DRAM {
                         else { 
                             regSteps += "\n[Found Dependence]\n";
                             if (stuck[i]!=0){
-                                if (priority.size() == 0){
-                                    dependency = all;
-                                }
                                 priority.push_back(i);
                                 stuck[i]=0;
                             }
@@ -676,9 +674,6 @@ class DRAM {
                         else {
                             regSteps += "\n[Found Dependence]\n";
                             if (stuck[i]!=0){
-                                if (priority.size() == 0){
-                                    dependency = all;
-                                }
                                 priority.push_back(i);
                                 stuck[i]=0;
                             }
@@ -691,7 +686,7 @@ class DRAM {
             bool started = false;
             clock+=1;
             for (int i =0; i< N; i++) {
-                if (arrayIns[i].size() !=0 && stuck[i] != -2) {
+                if (arrayIns[i].size() !=0 && stuck[i] != -2 && stuck[i] != 0) {
                     if ((arrayIns[i].at(0) == "lw" || arrayIns[i].at(0) == "sw")) {
                         programs[i].printRegSet2(lineNo[i], arrayIns[i], "  DRAM Request Issued");
                         if (started == false) {
@@ -762,40 +757,16 @@ class DRAM {
     }
     void handleBlock(vector<string> *arrayIns){
         if (!isOn && !priority.empty()){
-
-            int currRowDep = getDepCurr();
-
-            if (currRowDep != -1 && currI != -1){
-                // current row complete
-                int i = 0;
-                if (currI == currRowDep){
-                    for (auto& it : dependency ){
-                        if (it.first == rowNum) {
-                            dependency.erase(dependency.begin() + i);
-                            break;
-                        }
-                        i += 1;
-                    }
-
-                    if (dependency.empty() ) {
-                        stuck[priority[0]]=-1;
-                        priority.erase(priority.begin());
-
-                        if (!priority.empty()) {
-
-                            dependency = allDep(arrayIns[priority[0]],priority[0]);
-                        }
-                    }
-
+            vector<pair<int,int>> all;          
+            all = allDep(arrayIns[priority[0]],priority[0]);
+            if (all.empty()){
+                stuck[priority[0]]=-1;
+                priority.erase(priority.begin());
+                if (priority.empty()){
+                    return;
                 }
-
+                initTask(arrayIns[priority[0]],priority[0]);
             }
-            if (priority.empty()){
-                return;
-            }
-
-            initTask(arrayIns[priority[0]],priority[0]);
-            
         }
     }
 
